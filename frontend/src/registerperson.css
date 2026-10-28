@@ -1,0 +1,171 @@
+
+.register-person-button,
+.register-person-submit,
+.register-person-cancel,
+.register-person-close {
+  font: inherit;
+  cursor: pointer;
+}
+
+.register-person-button,
+.register-person-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 9px;
+  background: #123d32;
+  color: #fff;
+  padding: 11px 16px;
+  font-weight: 600;
+}
+
+.register-person-button:hover,
+.register-person-submit:hover {
+  background: #1b5948;
+}
+
+.register-person-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(18 35 29 / 55%);
+  overflow-y: auto;
+}
+
+.register-person-modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #fffdf8;
+  color: #263c32;
+  border: 1px solid #e7dfcc;
+  border-radius: 16px;
+  padding: 26px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 20%);
+}
+
+.register-person-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.register-person-header h2 {
+  margin: 0 0 7px;
+  color: #123d32;
+}
+
+.register-person-header p {
+  margin: 0;
+  color: #68766d;
+  font-size: 14px;
+}
+
+.register-person-close {
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  background: #edf1e9;
+  color: #123d32;
+}
+
+.register-person-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.register-person-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #34483d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.register-person-grid input,
+.register-person-grid select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d9dfd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #263c32;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.register-person-grid input:focus,
+.register-person-grid select:focus {
+  outline: 2px solid #c9a33b;
+  outline-offset: 1px;
+  border-color: #c9a33b;
+}
+
+.register-person-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.register-person-cancel {
+  border: 1px solid #d9dfd5;
+  border-radius: 9px;
+  padding: 10px 16px;
+  background: #fff;
+  color: #34483d;
+}
+
+.register-person-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.register-person-success,
+.register-person-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.register-person-success {
+  background: #e4eee6;
+  color: #123d32;
+}
+
+.register-person-error {
+  background: #fff0ed;
+  color: #9a3025;
+}
+
+@media (max-width: 600px) {
+  .register-person-overlay {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .register-person-modal {
+    max-height: 95vh;
+    padding: 18px;
+  }
+
+  .register-person-grid {
+    grid-template-columns: 1fr;
+  }
+}
