@@ -47,10 +47,14 @@ class CommunionRecordSerializer(serializers.ModelSerializer):
         source="parish.name",
         read_only=True,
     )
+    person_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CommunionRecord
         fields = "__all__"
+
+    def get_person_name(self, obj):
+        return str(obj.person)
 
 
 class ConfirmationRecordSerializer(serializers.ModelSerializer):
@@ -58,10 +62,14 @@ class ConfirmationRecordSerializer(serializers.ModelSerializer):
         source="parish.name",
         read_only=True,
     )
+    person_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ConfirmationRecord
         fields = "__all__"
+
+    def get_person_name(self, obj):
+        return str(obj.person)
 
 
 class MatrimonyRecordSerializer(serializers.ModelSerializer):
@@ -69,6 +77,7 @@ class MatrimonyRecordSerializer(serializers.ModelSerializer):
         source="parish.name",
         read_only=True,
     )
+    person_name = serializers.SerializerMethodField()
     spouse_profile = PersonSerializer(
         source="spouse",
         read_only=True,
@@ -77,3 +86,6 @@ class MatrimonyRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatrimonyRecord
         fields = "__all__"
+
+    def get_person_name(self, obj):
+        return str(obj.person)
