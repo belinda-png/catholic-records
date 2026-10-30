@@ -1053,3 +1053,154 @@ tbody tr:hover {
     font-size: 21px;
   }
 }
+
+
+/* Sacrament record workspace */
+.stat-card-clickable {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.stat-card-clickable:hover {
+  transform: translateY(-3px);
+  border-color: #c9a33b;
+  box-shadow: 0 8px 22px #3d4c3218;
+}
+.stat-card-clickable:focus-visible {
+  outline: 2px solid #c9a33b;
+  outline-offset: 3px;
+}
+.sacrament-workspace { margin: 0 0 30px; }
+.workspace-heading {
+  background: #fffdf8;
+  border: 1px solid #e8e2d5;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.back-button, .text-action {
+  border: 0;
+  background: transparent;
+  color: #55715d;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 650;
+  padding: 5px 0;
+}
+.workspace-title-row, .records-toolbar, .form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.workspace-title-row { margin-top: 15px; }
+.workspace-title-row h2 {
+  margin: 0;
+  color: #123d32;
+  font-size: 23px;
+}
+.workspace-description, .records-toolbar p {
+  color: #879188;
+  font-size: 11px;
+  margin: 7px 0 0;
+}
+.primary-action, .secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 7px;
+  padding: 11px 15px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.primary-action {
+  border: 1px solid #123d32;
+  color: #fffdf8;
+  background: #123d32;
+}
+.primary-action:hover { background: #205644; }
+.primary-action:disabled { opacity: .6; cursor: wait; }
+.secondary-action {
+  border: 1px solid #ddd8ca;
+  color: #526558;
+  background: #fffdf8;
+}
+.sacrament-form, .records-panel {
+  background: #fffdf8;
+  border: 1px solid #e8e2d5;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.form-heading { margin-bottom: 18px; }
+.form-heading h3, .records-toolbar h3 {
+  margin: 0;
+  color: #193e31;
+  font-size: 15px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #68776d;
+  font-size: 10px;
+  font-weight: 700;
+}
+.form-grid input, .form-grid select, .form-grid textarea, .records-search {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #e3dfd3;
+  border-radius: 7px;
+  padding: 10px 11px;
+  background: #fffefa;
+  color: #234333;
+  font: inherit;
+  font-size: 11px;
+}
+.form-grid textarea { resize: vertical; }
+.full-field { grid-column: 1 / -1; }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.records-toolbar { margin-bottom: 18px; }
+.records-search { max-width: 310px; }
+.record-actions { display: flex; gap: 6px; }
+.small-icon-action {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d8e3d7;
+  border-radius: 6px;
+  color: #315642;
+  background: #f7faf5;
+}
+.small-icon-action:hover { background: #e4eee6; }
+.small-icon-action.danger {
+  color: #984b40;
+  border-color: #ecd4cf;
+  background: #fff8f6;
+}
+.small-icon-action.danger:hover { background: #ffebe7; }
+
+@media (max-width: 760px) {
+  .workspace-title-row, .records-toolbar { align-items: flex-start; flex-direction: column; }
+  .workspace-title-row .primary-action { width: 100%; }
+  .form-grid { grid-template-columns: 1fr; }
+  .full-field { grid-column: auto; }
+  .records-search { max-width: none; }
+  .sacrament-form, .records-panel, .workspace-heading { padding: 16px; }
+}
