@@ -15,6 +15,11 @@ import {
   X,
   LoaderCircle,
   AlertCircle,
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
+  ArrowLeft,
 } from "lucide-react";
 import RegisterPerson from "./registerperson";
 import "./App.css";
@@ -39,6 +44,355 @@ function formatDate(value) {
   });
 }
 
+
+const SACRAMENTS = {
+  baptisms: {
+    title: "Baptism",
+    endpoint: "baptisms",
+    dateField: "date_of_baptism",
+    dateLabel: "Date of baptism",
+    needsNumber: true,
+  },
+  communions: {
+    title: "First Holy Communion",
+    endpoint: "communions",
+    dateField: "date_received",
+    dateLabel: "Date received",
+    needsNumber: false,
+  },
+  confirmations: {
+    title: "Confirmation",
+    endpoint: "confirmations",
+    dateField: "date_received",
+    dateLabel: "Date received",
+    needsNumber: false,
+  },
+  matrimonies: {
+    title: "Matrimony",
+    endpoint: "matrimonies",
+    dateField: "date_of_marriage",
+    dateLabel: "Date of marriage",
+    needsNumber: true,
+  },
+};
+
+function SacramentWorkspace({ type, parishId, onBack, onError, onChanged }) {
+  const config = SACRAMENTS[type];
+  const [records, setRecords] = useState([]);
+  const [peopleOptions, setPeopleOptions] = useState([]);
+  const [parishOptions, setParishOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [form, setForm] = useState({
+    person: "",
+    parish: parishId || "",
+    registration_number: "",
+    date: "",
+    minister: "",
+    spouse_name: "",
+    notes: "",
+  });
+
+  async function loadRecords() {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/${config.endpoint}/`);
+      if (!response.ok) throw new Error("Could not load sacramental records.");
+      const data = await response.json();
+      setRecords(Array.isArray(data) ? data : data.results || []);
+    } catch (err) {
+      onError(err.message || "Could not load sacramental records.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadParishes() {
+    try {
+      const response = await fetch(`${API}/parishes/`);
+      if (!response.ok) throw new Error("Could not load parishes.");
+      setParishOptions(await response.json());
+    } catch (err) {
+      onError(err.message || "Could not load parishes.");
+    }
+  }
+
+  async function loadPeople() {
+    try {
+      const params = new URLSearchParams();
+      if (parishId) params.set("parish_id", parishId);
+      const response = await fetch(`${API}/people/search/?${params.toString()}`);
+      if (!response.ok) throw new Error("Could not load people.");
+      const data = await response.json();
+      setPeopleOptions(data);
+    } catch (err) {
+      onError(err.message || "Could not load people.");
+    }
+  }
+
+  useEffect(() => {
+    loadRecords();
+    loadPeople();
+    loadParishes();
+    setForm((current) => ({ ...current, parish: parishId || "" }));
+  }, [type, parishId]);
+
+  function startNew() {
+    setEditingId(null);
+    setForm({
+      person: "",
+      parish: parishId || "",
+      registration_number: "",
+      date: "",
+      minister: "",
+      spouse_name: "",
+      notes: "",
+    });
+    setShowForm(true);
+  }
+
+  function startEdit(record) {
+    setEditingId(record.id);
+    setForm({
+      person: String(record.person || ""),
+      parish: String(record.parish || parishId || ""),
+      registration_number: record.registration_number || "",
+      date: record[config.dateField] || "",
+      minister: record.minister || "",
+      spouse_name: record.spouse_name || "",
+      notes: record.notes || "",
+    });
+    setShowForm(true);
+  }
+
+  async function saveRecord(event) {
+    event.preventDefault();
+    if (!form.person || !form.date || !form.parish) {
+      onError("Please select a person, parish, and date.");
+      return;
+    }
+    if (config.needsNumber && !form.registration_number.trim()) {
+      onError("Please enter the sacramental registration number.");
+      return;
+    }
+    if (type === "matrimonies" && !form.spouse_name.trim()) {
+      onError("Please enter the spouse's name.");
+      return;
+    }
+
+    const payload = {
+      person: Number(form.person),
+      parish: Number(form.parish),
+      [config.dateField]: form.date,
+      minister: form.minister,
+    };
+    if (type === "baptisms" || type === "matrimonies" || form.registration_number.trim()) {
+      payload.registration_number = form.registration_number.trim();
+    }
+    if (type === "matrimonies") {
+      payload.spouse_name = form.spouse_name.trim();
+      payload.notes = form.notes;
+    }
+
+    setSaving(true);
+    try {
+      const url = editingId
+        ? `${API}/${config.endpoint}/${editingId}/`
+        : `${API}/${config.endpoint}/`;
+      const response = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = Object.entries(data)
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : JSON.stringify(value)}`)
+          .join(" | ");
+        throw new Error(message || "Could not save the record.");
+      }
+      setShowForm(false);
+      await loadRecords();
+      onChanged();
+    } catch (err) {
+      onError(err.message || "Could not save the record.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteRecord(id) {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    try {
+      const response = await fetch(`${API}/${config.endpoint}/${id}/`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Could not delete this record.");
+      await loadRecords();
+      onChanged();
+    } catch (err) {
+      onError(err.message || "Could not delete the record.");
+    }
+  }
+
+  const filteredRecords = records.filter((record) => {
+    const personName = record.person_name || "";
+    const number = record.registration_number || "";
+    return `${personName} ${number}`.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  return (
+    <section className="sacrament-workspace">
+      <div className="workspace-heading">
+        <button className="back-button" onClick={onBack}>
+          <ArrowLeft size={16} /> Dashboard
+        </button>
+        <div className="workspace-title-row">
+          <div>
+            <p className="eyebrow">SACRAMENTAL REGISTER</p>
+            <h2>{config.title} records</h2>
+            <p className="workspace-description">
+              Register, search, review, and maintain {config.title.toLowerCase()} entries.
+            </p>
+          </div>
+          <button className="primary-action" onClick={startNew}>
+            <Plus size={17} /> Add record
+          </button>
+        </div>
+      </div>
+
+      {showForm && (
+        <form className="sacrament-form" onSubmit={saveRecord}>
+          <div className="form-heading">
+            <h3>{editingId ? "Update record" : `New ${config.title} record`}</h3>
+            <button type="button" className="text-action" onClick={() => setShowForm(false)}>
+              Cancel
+            </button>
+          </div>
+          <div className="form-grid">
+            <label>
+              Person *
+              <select value={form.person} onChange={(e) => setForm({ ...form, person: e.target.value })} required>
+                <option value="">Select a person</option>
+                {peopleOptions.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.christian_name} {person.surname} — {person.registration_number}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Parish *
+              <select value={form.parish} onChange={(e) => setForm({ ...form, parish: e.target.value })} required>
+                <option value="">Select parish</option>
+                {/* The selected parish is supplied by the dashboard. */}
+                {parishOptions.map((parish) => (
+                  <option key={parish.id} value={parish.id}>{parish.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {config.dateLabel} *
+              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+            </label>
+            <label>
+              Register number {config.needsNumber ? "*" : ""}
+              <input
+                value={form.registration_number}
+                onChange={(e) => setForm({ ...form, registration_number: e.target.value })}
+                required={config.needsNumber}
+                placeholder="Enter register number"
+              />
+            </label>
+            <label>
+              Minister / officiating priest
+              <input value={form.minister} onChange={(e) => setForm({ ...form, minister: e.target.value })} placeholder="Enter minister's name" />
+            </label>
+            {type === "matrimonies" && (
+              <>
+                <label>
+                  Spouse's name *
+                  <input value={form.spouse_name} onChange={(e) => setForm({ ...form, spouse_name: e.target.value })} required />
+                </label>
+                <label className="full-field">
+                  Notes
+                  <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows="3" />
+                </label>
+              </>
+            )}
+          </div>
+          <div className="form-actions">
+            <button type="button" className="secondary-action" onClick={() => setShowForm(false)}>Cancel</button>
+            <button type="submit" className="primary-action" disabled={saving}>
+              <Save size={16} /> {saving ? "Saving..." : editingId ? "Save changes" : "Save record"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="records-panel">
+        <div className="records-toolbar">
+          <div>
+            <h3>Register entries</h3>
+            <p>{filteredRecords.length} record{filteredRecords.length === 1 ? "" : "s"} found</p>
+          </div>
+          <input
+            className="records-search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search person or register number"
+          />
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PERSON</th>
+                <th>REGISTER NO.</th>
+                <th>DATE</th>
+                <th>PARISH</th>
+                <th>MINISTER</th>
+                {type === "matrimonies" && <th>SPOUSE</th>}
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={type === "matrimonies" ? 7 : 6} className="empty-state">Loading records...</td></tr>
+              ) : filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={type === "matrimonies" ? 7 : 6} className="empty-state">
+                    <strong>No {config.title.toLowerCase()} records yet</strong>
+                    <span>Use “Add record” to enter the first register entry.</span>
+                  </td>
+                </tr>
+              ) : filteredRecords.map((record) => (
+                <tr key={record.id}>
+                  <td>{record.person_name || `Person #${record.person}`}</td>
+                  <td><span className="registration-number">{record.registration_number || "—"}</span></td>
+                  <td>{formatDate(record[config.dateField])}</td>
+                  <td>{record.parish_name || `Parish #${record.parish}`}</td>
+                  <td>{record.minister || "—"}</td>
+                  {type === "matrimonies" && <td>{record.spouse_name || "—"}</td>}
+                  <td>
+                    <div className="record-actions">
+                      <button className="small-icon-action" onClick={() => startEdit(record)} title="Edit record"><Pencil size={15} /></button>
+                      <button className="small-icon-action danger" onClick={() => deleteRecord(record.id)} title="Delete record"><Trash2 size={15} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function App() {
   const [parishes, setParishes] = useState([]);
   const [parishId, setParishId] = useState("");
@@ -52,6 +406,7 @@ function App() {
   const [loadingPeople, setLoadingPeople] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState("");
+  const [activeSacrament, setActiveSacrament] = useState("");
 
   useEffect(() => {
     async function loadParishes() {
@@ -389,7 +744,16 @@ function App() {
               const Icon = card.icon;
 
               return (
-                <article className="stat-card" key={card.label}>
+                <button
+                  type="button"
+                  className="stat-card stat-card-clickable"
+                  key={card.label}
+                  onClick={() => setActiveSacrament(
+                    card.label === "Baptisms" ? "baptisms" :
+                    card.label === "First Holy Communion" ? "communions" :
+                    card.label === "Confirmations" ? "confirmations" : "matrimonies"
+                  )}
+                >
                   <div className={`stat-icon ${card.tone}`}>
                     <Icon size={22} strokeWidth={1.8} />
                   </div>
@@ -400,11 +764,27 @@ function App() {
                     </strong>
                     <span className="stat-caption">Total records</span>
                   </div>
-                </article>
+                </button>
               );
             })}
           </section>
 
+          {activeSacrament ? (
+            <SacramentWorkspace
+              type={activeSacrament}
+              parishId={parishId}
+              onBack={() => setActiveSacrament("")}
+              onError={setError}
+              onChanged={() => {
+                if (parishId) {
+                  fetch(`${API}/parishes/${parishId}/statistics/`)
+                    .then((response) => response.json())
+                    .then(setStats)
+                    .catch(() => setError("Could not refresh parish statistics."));
+                }
+              }}
+            />
+          ) : (
           <section className="directory-section">
             <div className="section-heading directory-heading">
               <div>
@@ -505,6 +885,7 @@ function App() {
               <span>{people.length} results</span>
             </div>
           </section>
+          )}
 
           <footer className="page-footer">
             <span>Tororo Archdiocese · Sacramental Records Management</span>
