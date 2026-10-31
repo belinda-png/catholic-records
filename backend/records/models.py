@@ -28,8 +28,8 @@ class Parish(models.Model):
 class Person(models.Model):
     registration_number = models.CharField(
         max_length=50,
-        unique=True
-    )
+        primary_key=True
+            )
     christian_name = models.CharField(max_length=100)
     surname = models.CharField(max_length=100)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -64,7 +64,10 @@ class BaptismRecord(models.Model):
         on_delete=models.PROTECT,
         related_name="baptism_records"
     )
-    registration_number = models.CharField(max_length=50)
+    registration_number = models.CharField(
+        max_length=50,
+        primary_key=True
+    )   
     date_of_baptism = models.DateField()
     parish = models.ForeignKey(
         Parish,
@@ -126,7 +129,10 @@ class ConfirmationRecord(models.Model):
         related_name="confirmation_records"
     )
     minister = models.CharField(max_length=200, blank=True)
-    registration_number = models.CharField(max_length=50, blank=True)
+    registration_number = models.CharField(
+        max_length=50,
+        primary_key=True
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -164,8 +170,10 @@ class MatrimonyRecord(models.Model):
         on_delete=models.PROTECT,
         related_name="matrimony_records"
     )
-
-    registration_number = models.CharField(max_length=50)
+    registration_number = models.CharField(
+        max_length=50,
+        primary_key=True
+    )
 
     spouse_baptism_parish = models.ForeignKey(
         Parish,
