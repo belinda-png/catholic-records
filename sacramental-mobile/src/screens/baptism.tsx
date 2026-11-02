@@ -11,10 +11,15 @@ import {
 import { useRouter } from "expo-router";
 import ParishPicker from "../src/components/ParishPicker";
 import { API_URL } from "../src/api";
+import { Text, View } from "react-native";
 
 export default function BaptismScreen() {
   const router = useRouter();
-
+    return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Baptism form goes here</Text>
+    </View>
+  );
   const [search, setSearch] = useState("");
   const [person, setPerson] = useState<any>(null);
   const [parish, setParish] = useState("");
