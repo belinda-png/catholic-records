@@ -11,7 +11,7 @@ import {
 
 import { useRouter } from "expo-router";
 import ParishPicker from "../src/components/ParishPicker";
-import PersonSearch, { Person } from "../src/components/PersonSearch";
+import PersonSearch, { Person } from "../components/PersonSearch";
 import { API_URL } from "../src/app";
 
 export default function BaptismScreen() {
