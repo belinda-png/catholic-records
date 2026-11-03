@@ -1,15 +1,16 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { Link } from "expo-router";
 
 export default function HomeScreen() {
   const router = useRouter();
 
+  // Each card has a name and the screen it opens.
+  // route is empty for screens we haven't created yet.
   const sacraments = [
-    "Baptism",
-    "First Communion",
-    "Confirmation",
-    "Matrimony",
+    { name: "Baptism", route: "/baptism" },
+    { name: "First Communion", route: null },
+    { name: "Confirmation", route: null },
+    { name: "Matrimony", route: null },
   ];
 
   return (
@@ -19,11 +20,15 @@ export default function HomeScreen() {
 
       {sacraments.map((sacrament) => (
         <Pressable
-          key={sacrament}
+          key={sacrament.name}
           style={styles.card}
-          onPress={() => router.push("/explore")}
+          onPress={() => {
+            if (sacrament.route) {
+              router.push(sacrament.route as any);
+            }
+          }}
         >
-          <Text style={styles.cardText}>{sacrament}</Text>
+          <Text style={styles.cardText}>{sacrament.name}</Text>
         </Pressable>
       ))}
     </View>
