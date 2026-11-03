@@ -10,7 +10,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Link } from "expo-router";
-import { API_URL } from "../src/api";
+import { API_URL } from "../src/app";
 
 type Parish = {
   id: number;
