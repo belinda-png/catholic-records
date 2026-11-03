@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
-const LOCAL_IP = "192.168.1.5"; // Replace with your laptop's IPv4 address
+// Your laptop's IPv4 address (run `ipconfig` and look for "IPv4 Address")
+const LOCAL_IP = "192.168.6.110";
 
 export const API_URL =
   Platform.OS === "web"
