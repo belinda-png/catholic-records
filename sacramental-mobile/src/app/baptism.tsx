@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { useRouter } from "expo-router";
-import ParishPicker from "../src/components/ParishPicker";
+import ParishPicker from "../components/ParishPicker";
 import PersonSearch, { Person } from "../components/PersonSearch";
 import { API_URL } from "../app";
 
