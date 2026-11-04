@@ -1,0 +1,13 @@
+import { Person } from '../types/records';
+
+export const people: Person[] = [
+{ id: 'p1', regNo: '44880', fullName: 'Belinda Mukhaye', gender: 'Female', dob: '2019-01-03', fatherName: 'Stephen Mukhaye', motherName: 'Harriet Nabwire', parishId: 'holy-family-tororo', village: 'Mulanda Road', phone: '', registeredOn: '2019-02-10' },
+{ id: 'p2', regNo: '22665', fullName: 'Bibiana Mukhaye', gender: 'Female', dob: '2026-01-27', fatherName: 'Stephen Mukhaye', motherName: 'Harriet Nabwire', parishId: 'holy-family-tororo', village: 'Mulanda Road', phone: '', registeredOn: '2026-03-01' },
+{ id: 'p3', regNo: '31207', fullName: 'Peter Ochieng Owor', gender: 'Male', dob: '1994-06-14', fatherName: 'John Owor', motherName: 'Margaret Akumu', parishId: 'holy-family-tororo', village: 'Osukuru', phone: '+256 772 410 228', registeredOn: '1994-07-20' },
+{ id: 'p4', regNo: '31944', fullName: 'Maria Nafula', gender: 'Female', dob: '1997-09-02', fatherName: 'Joseph Wandera', motherName: 'Teresa Nekesa', parishId: 'our-lady-busia', village: 'Masaba', phone: '+256 701 553 190', registeredOn: '1997-10-05' },
+{ id: 'p5', regNo: '27518', fullName: 'Joseph Oboth', gender: 'Male', dob: '1988-03-21', fatherName: 'Andrew Oboth', motherName: 'Christine Adikin', parishId: 'st-peter-nagongera', village: 'Nagongera Town', phone: '+256 782 001 774', registeredOn: '1988-04-17' },
+{ id: 'p6', regNo: '27602', fullName: 'Agnes Achieng', gender: 'Female', dob: '1990-11-08', fatherName: 'Paul Ofwono', motherName: 'Rose Amoit', parishId: 'st-peter-nagongera', village: 'Kirewa', phone: '+256 753 662 041', registeredOn: '1990-12-02' },
+{ id: 'p7', regNo: '40311', fullName: 'Emmanuel Wandera', gender: 'Male', dob: '2011-05-30', fatherName: 'Joseph Wandera', motherName: 'Teresa Nekesa', parishId: 'our-lady-busia', village: 'Masaba', phone: '', registeredOn: '2011-07-10' },
+{ id: 'p8', regNo: '38870', fullName: 'Teresa Apio', gender: 'Female', dob: '2009-08-15', fatherName: 'Francis Okiror', motherName: 'Grace Akello', parishId: 'st-joseph-pallisa', village: 'Kamuge', phone: '', registeredOn: '2009-09-20' },
+{ id: 'p9', regNo: '35126', fullName: 'Francis Ojambo', gender: 'Male', dob: '2005-02-11', fatherName: 'Martin Ojambo', motherName: 'Annet Auma', parishId: 'st-jude-mulanda', village: 'Mulanda', phone: '+256 774 219 330', registeredOn: '2005-03-27' },
+{ id: 'p10', regNo: '36402', fullName: 'Rose Nabwire', gender: 'Female', dob: '2012-12-19', fatherName: 'Simon Wafula', motherName: 'Lucy Nekesa', parishId: 'sacred-heart-budaka', village: 'Iki-Iki', phone: '', registeredOn: '2013-01-13' }];
