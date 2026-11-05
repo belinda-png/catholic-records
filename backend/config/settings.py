@@ -135,7 +135,7 @@ MAILERS = {
 }
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media" 
-ADULT_AGE = 18  # age limit: this age and above goes in the Adults list
+ADULT_AGE = 6  # age limit: this age and above goes in the Adults list
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": None,
