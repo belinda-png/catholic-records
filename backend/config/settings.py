@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
-
+from rest_framework.permissions import AllowAny
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
