@@ -59,6 +59,8 @@ class Person(models.Model):
 
 
 class BaptismRecord(models.Model):
+    CHILD, ADULT = "Child", "Adult"
+    CATEGORIES = [(CHILD, "Child"), (ADULT, "Adult")]
     person = models.ForeignKey(
         Person,
         on_delete=models.PROTECT,
