@@ -95,111 +95,103 @@ class BaptismRecord(models.Model):
 
 
 class CommunionRecord(models.Model):
-    person = models.ForeignKey(
-        Person,
-        on_delete=models.PROTECT,
-        related_name="communion_records"
-    )
-    date_received = models.DateField()
-    parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="communion_records"
-    )
-    minister = models.CharField(max_length=200, blank=True)
+    baptism = models.ForeignKey(BaptismRecord, on_delete=models.PROTECT, related_name="communion_records")
     registration_number = models.CharField(max_length=50, blank=True)
-
+    date_received = models.DateField()
+    parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="communion_records")
+    minister = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-date_received"]
+        ordering = ["id"]
+        constraints = [
+            models.UniqueConstraint(fields=["parish", "registration_number"],
+                                    condition=~Q(registration_number=""),
+                                    name="unique_communion_register_per_parish"),
+        ]
 
     def __str__(self):
-        return f"First Holy Communion: {self.person}"
+        return f"First Holy Communion: {self.baptism.full_name}"
+
+
 
 
 class ConfirmationRecord(models.Model):
-    person = models.ForeignKey(
-        Person,
-        on_delete=models.PROTECT,
-        related_name="confirmation_records"
-    )
+    baptism = models.ForeignKey(BaptismRecord, on_delete=models.PROTECT, related_name="confirmation_records")
+    registration_number = models.CharField(max_length=50, blank=True)
     date_received = models.DateField()
-    parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="confirmation_records"
-    )
+    parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="confirmation_records")
     minister = models.CharField(max_length=200, blank=True)
-    registration_number = models.CharField(
-        max_length=50,
-        primary_key=True
-    )
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-date_received"]
+        ordering = ["id"]
+        constraints = [
+            models.UniqueConstraint(fields=["parish", "registration_number"],
+                                    condition=~Q(registration_number=""),
+                                    name="unique_confirmation_register_per_parish"),
+        ]
 
     def __str__(self):
-        return f"Confirmation: {self.person}"
-
+        return f"Confirmation: {self.baptism.full_name}"
 
 
 class MatrimonyRecord(models.Model):
-    person = models.ForeignKey(
-        Person,
-        on_delete=models.PROTECT,
-        related_name="matrimony_records"
-    )
-
-    # Link to the spouse's actual person profile when available.
-    spouse = models.ForeignKey(
-        Person,
-        on_delete=models.PROTECT,
-        related_name="spouse_matrimony_records",
-        null=True,
-        blank=True
-    )
-
-    # Preserve the spouse's name exactly as recorded in the marriage register.
+    baptism = models.ForeignKey(BaptismRecord, on_delete=models.PROTECT, related_name="matrimony_records")
+    # Spouse's baptism record, when the spouse was baptised in this register.
+    spouse_baptism = models.ForeignKey(BaptismRecord, on_delete=models.PROTECT,
+                                       related_name="spouse_matrimony_records", null=True, blank=True)
+    # Spouse's name exactly as written in the marriage register.
     spouse_name = models.CharField(max_length=200)
 
+    registration_number = models.CharField(max_length=50, blank=True)  # was missing in your version
     date_of_marriage = models.DateField()
+    parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="matrimony_records")
 
-    parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="matrimony_records"
-    )
- 
-
-    spouse_baptism_parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="spouse_baptism_references",
-        null=True,
-        blank=True
-    )
-
-    spouse_baptism_registration_number = models.CharField(
-        max_length=50,
-        blank=True
-    )
+    # For a spouse baptised somewhere else.
+    spouse_baptism_parish = models.ForeignKey(Parish, on_delete=models.PROTECT,
+                                              related_name="spouse_baptism_references",
+                                              null=True, blank=True)
+    spouse_baptism_registration_number = models.CharField(max_length=50, blank=True)
 
     notes = models.TextField(blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-date_of_marriage"]
+        ordering = ["id"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["parish", "registration_number"],
-                name="unique_marriage_register_per_parish"
-            )
+            models.UniqueConstraint(fields=["parish", "registration_number"],
+                                    condition=~Q(registration_number=""),
+                                    name="unique_marriage_register_per_parish"),
         ]
 
     def __str__(self):
-        return f"Matrimony: {self.person} and {self.spouse_name}"
+        return f"Matrimony: {self.baptism.full_name} and {self.spouse_name}"
+
+
+class Document(models.Model):
+    """One document store for every sacrament."""
+    BAPTISM, COMMUNION, CONFIRMATION, MARRIAGE, OTHER = (
+        "BAPTISM", "COMMUNION", "CONFIRMATION", "MARRIAGE", "OTHER")
+    CATEGORIES = [
+        (BAPTISM, "Baptism"),
+        (COMMUNION, "First Holy Communion"),
+        (CONFIRMATION, "Confirmation"),
+        (MARRIAGE, "Marriage"),
+        (OTHER, "Other"),
+    ]
+
+    file = models.FileField(upload_to="documents/%Y/%m/")
+    category = models.CharField(max_length=15, choices=CATEGORIES, default=OTHER)
+    baptism = models.ForeignKey(BaptismRecord, on_delete=models.SET_NULL,
+                                null=True, blank=True, related_name="documents")
+    original_name = models.CharField(max_length=255)
+    size = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return self.original_name
