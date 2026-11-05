@@ -27,7 +27,7 @@ class Parish(models.Model):
 
 class Person(models.Model):
     registration_number = models.CharField(
-        max_length=50,
+        max_length=10,
         primary_key=True
             )
     christian_name = models.CharField(max_length=100)
@@ -170,10 +170,7 @@ class MatrimonyRecord(models.Model):
         on_delete=models.PROTECT,
         related_name="matrimony_records"
     )
-    registration_number = models.CharField(
-        max_length=50,
-        primary_key=True
-    )
+ 
 
     spouse_baptism_parish = models.ForeignKey(
         Parish,

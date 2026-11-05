@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "records",
 ]
-
+MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware") 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -132,4 +132,14 @@ MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
+}
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media" 
+ADULT_AGE = 18  # age limit: this age and above goes in the Adults list
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": None,
+    # WARNING: AllowAny is for testing only. These records are personal data,
+    # so before going live change this to IsAuthenticated and add login.
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
 }
