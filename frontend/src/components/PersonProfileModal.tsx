@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ArrowLeftIcon, PlusIcon, UserIcon } from 'lucide-react';
+import { ArrowLeftIcon, FileTextIcon, PlusIcon, UserIcon } from 'lucide-react';
 import { useRecords } from '../contexts/RecordsContext';
 import { sacraments } from '../data/sacraments';
 import { SacramentRecord, SacramentType } from '../types/records';
@@ -19,7 +19,7 @@ interface PersonProfileModalProps {
 const linkClass = 'font-semibold text-forest underline decoration-gold/60 underline-offset-4 transition-colors duration-150 hover:text-gold';
 
 export function PersonProfileModal({ stack, onClose, onOpenPerson, onBack, onRecord }: PersonProfileModalProps) {
-  const { getPerson, recordsFor } = useRecords();
+  const { getPerson, recordsFor, documents } = useRecords();
   const personId = stack[stack.length - 1];
   const person = getPerson(personId);
   const previous = stack.length > 1 ? getPerson(stack[stack.length - 2]) : undefined;
@@ -45,6 +45,7 @@ export function PersonProfileModal({ stack, onClose, onOpenPerson, onBack, onRec
   }
 
   const recs = recordsFor(person.id);
+  const personDocs = documents.filter((d) => d.personId === person.id);
   const age = person.dob ? ageFrom(person.dob) : null;
   const details = [
   { label: 'Registration no.', value: person.regNo },
@@ -136,12 +137,28 @@ export function PersonProfileModal({ stack, onClose, onOpenPerson, onBack, onRec
               </div>
             )}
           </dl>
+          {personDocs.length > 0 &&
+          <div className="mt-6">
+              <h3 className="mb-2 text-sm font-semibold text-forest">Documents</h3>
+              <ul className="space-y-1.5">
+                {personDocs.map((d) =>
+              <li key={d.id}>
+                    <a href={d.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors duration-150 hover:bg-cream">
+                      <FileTextIcon className="h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate text-ink">{d.name}</span>
+                      <span className="shrink-0 text-xs text-muted">{d.category}</span>
+                    </a>
+                  </li>
+              )}
+              </ul>
+            </div>
+          }
         </section>
 
         <section aria-labelledby="profile-history">
           <h3 id="profile-history" className="mb-3 text-sm font-semibold text-forest">Sacramental history</h3>
           <ol className="relative space-y-3 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-line">
-            {sacraments.map((s) => {
+            {sacraments.filter((s) => s.type !== 'conversion' || recs.some((r) => r.type === 'conversion')).map((s) => {
               const matching = recs.filter((r) => r.type === s.type);
               return (
                 <li key={s.type} className="relative flex gap-3">
@@ -174,6 +191,12 @@ export function PersonProfileModal({ stack, onClose, onOpenPerson, onBack, onRec
                             {s.ministerLabel}: {r.minister}
                             {r.sponsors ? ` · ${s.sponsorsLabel}: ${r.sponsors}` : ''}
                           </p>
+                          {r.extra.candidateType &&
+                      <p>{r.extra.candidateType === 'adult' ? 'Adult baptism' : 'Child baptism'}{r.extra.conversion === 'yes' ? ' · on reception into the Church' : ''}</p>
+                      }
+                          {s.extraFields.filter((f) => r.extra[f.key]).map((f) =>
+                      <p key={f.key}>{f.label}: {r.extra[f.key]}</p>
+                      )}
                           <p className="font-medium text-ink/70">Reg. No. {r.certificateNo}</p>
                         </div>
                     )

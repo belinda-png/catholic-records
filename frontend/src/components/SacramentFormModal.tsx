@@ -4,10 +4,10 @@ import { AlertTriangleIcon, CheckIcon, Loader2Icon } from 'lucide-react';
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
 import { parishes } from '../data/parishes';
-import { PersonDraft, PersonDraftErrors, SacramentRecord, SacramentType, SpouseDraft } from '../types/records';
+import { CandidateType, PersonDraft, PersonDraftErrors, SacramentRecord, SacramentType, SpouseDraft } from '../types/records';
 import { formatDate } from '../utils/format';
 import { draftToPerson, emptyDraft } from '../utils/people';
-import { checkEligibility, getSacrament, toneClass } from '../utils/sacraments';
+import { checkEligibility, getSacrament, isEntryType, toneClass } from '../utils/sacraments';
 import { inputClass, primaryButton, secondaryButton } from '../utils/styles';
 import { BaptisedPersonPicker } from './BaptisedPersonPicker';
 import { BaptismCandidateFields } from './BaptismCandidateFields';
@@ -32,11 +32,12 @@ interface Details {
   extra: Record<string, string>;
 }
 
-type DetailErrors = Partial<Record<'parishId' | 'date' | 'minister', string>>;
+type DetailErrors = Partial<Record<'parishId' | 'date' | 'minister' | 'previousReligion', string>>;
 
 export function SacramentFormModal({ type, initialPersonId, onClose }: SacramentFormModalProps) {
   const config = getSacrament(type);
-  const isBaptism = type === 'baptism';
+  const isEntry = isEntryType(type);
+  const isConversion = type === 'conversion';
   const isMarriage = type === 'matrimony';
   const { getPerson, addPerson, addRecord, recordsFor } = useRecords();
   const { selectedParishId, openProfile, openSacrament } = useUI();
@@ -44,8 +45,9 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const emptyDetails: Details = { parishId: defaultParish, date: '', minister: '', sponsors: '', notes: '', extra: {} };
 
   const [candidate, setCandidate] = useState<PersonDraft>(emptyDraft(defaultParish));
+  const [candidateType, setCandidateType] = useState<CandidateType>(isConversion ? 'adult' : 'child');
   const [personId, setPersonId] = useState<string | undefined>(() =>
-  !isBaptism && initialPersonId && checkEligibility(type, recordsFor(initialPersonId)).ok ? initialPersonId : undefined
+  !isEntry && initialPersonId && checkEligibility(type, recordsFor(initialPersonId)).ok ? initialPersonId : undefined
   );
   const [spouse, setSpouse] = useState<SpouseDraft>(emptySpouse);
   const [details, setDetails] = useState<Details>(emptyDetails);
@@ -54,11 +56,12 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const [spouseError, setSpouseError] = useState<string>();
   const [detailErrors, setDetailErrors] = useState<DetailErrors>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [saved, setSaved] = useState<SacramentRecord | null>(null);
+  const [saved, setSaved] = useState<{record: SacramentRecord;baptism?: SacramentRecord;} | null>(null);
   const [peek, setPeek] = useState<string[]>([]);
 
   const person = personId ? getPerson(personId) : undefined;
   const viewPerson = (id: string) => setPeek([id]);
+  const sponsorsLabel = type === 'baptism' && candidateType === 'adult' ? 'Sponsor' : config.sponsorsLabel;
 
   const warnings: string[] = [];
   if (isMarriage) {
@@ -84,7 +87,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     e.preventDefault();
     const cErr: PersonDraftErrors = {};
     let pErr: string | undefined;
-    if (isBaptism) {
+    if (isEntry) {
       if (!candidate.fullName.trim()) cErr.fullName = 'Enter the full name';
       if (!candidate.gender) cErr.gender = 'Select gender';
       if (!candidate.dob) cErr.dob = 'Enter date of birth';
@@ -96,6 +99,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     if (!details.parishId) dErr.parishId = 'Choose the parish';
     if (!details.date) dErr.date = 'Enter the date';
     if (!details.minister.trim()) dErr.minister = 'Enter the minister';
+    if (isConversion && !details.extra.previousReligion?.trim()) dErr.previousReligion = 'Enter their previous religion';
     setCandidateErrors(cErr);
     setPersonError(pErr);
     setSpouseError(sErr);
@@ -104,28 +108,30 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
 
     setStatus('saving');
     window.setTimeout(() => {
-      const subjectId = isBaptism ? addPerson(draftToPerson({ ...candidate, parishId: details.parishId })).id : personId as string;
-      const extra = isMarriage ?
-      {
-        ...details.extra,
-        spouseName: spouse.fullName.trim(),
-        spouseBaptisedAt: spouse.baptisedAt,
-        spouseBaptisedOn: spouse.baptisedOn,
-        spouseBaptismRegNo: spouse.baptismRegNo
-      } :
-      details.extra;
-      const record = addRecord({
-        type,
+      const subjectId = isEntry ? addPerson(draftToPerson({ ...candidate, parishId: details.parishId })).id : personId as string;
+      const common = {
         personId: subjectId,
-        spouseId: isMarriage ? spouse.personId : undefined,
         parishId: details.parishId,
         date: details.date,
         minister: details.minister.trim(),
-        sponsors: details.sponsors.trim(),
-        notes: details.notes.trim(),
-        extra
-      });
-      setSaved(record);
+        sponsors: details.sponsors.trim()
+      };
+      let extra = details.extra;
+      if (type === 'baptism') extra = { ...extra, candidateType };
+      if (isMarriage) {
+        extra = {
+          ...extra,
+          spouseName: spouse.fullName.trim(),
+          spouseBaptisedAt: spouse.baptisedAt,
+          spouseBaptisedOn: spouse.baptisedOn,
+          spouseBaptismRegNo: spouse.baptismRegNo
+        };
+      }
+      const record = addRecord({ ...common, type, spouseId: isMarriage ? spouse.personId : undefined, notes: details.notes.trim(), extra });
+      const baptism = isConversion ?
+      addRecord({ ...common, type: 'baptism', notes: 'Baptised on reception into the Catholic Church', extra: { candidateType: 'adult', conversion: 'yes' } }) :
+      undefined;
+      setSaved({ record, baptism });
       setStatus('saved');
     }, 500);
   };
@@ -151,12 +157,12 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
 
 
   if (status === 'saved' && saved) {
-    const main = getPerson(saved.personId);
-    const other = saved.spouseId ? getPerson(saved.spouseId) : undefined;
+    const main = getPerson(saved.record.personId);
+    const other = saved.record.spouseId ? getPerson(saved.record.spouseId) : undefined;
     return (
       <Modal
         title={`${config.label} recorded`}
-        subtitle={isBaptism ? 'A new member has entered the register.' : 'The register has been updated.'}
+        subtitle={isEntry ? 'A new member has entered the register.' : 'The register has been updated.'}
         icon={icon}
         onClose={onClose}
         size="md"
@@ -171,14 +177,19 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
           <span className="grid h-14 w-14 place-items-center rounded-full bg-sage text-sage-ink">
             <CheckIcon className="h-7 w-7" />
           </span>
-          {isBaptism && main &&
+          {isEntry && main &&
           <>
               <p className="mt-4 text-lg font-semibold text-forest">{main.fullName}</p>
               <p className="text-sm text-muted">Registration number <span className="font-semibold tracking-widest text-forest">{main.regNo}</span></p>
             </>
           }
           <p className="mt-4 text-sm text-muted">{config.label} Reg. No.</p>
-          <p className="text-2xl font-semibold tracking-wide text-forest">{saved.certificateNo}</p>
+          <p className="text-2xl font-semibold tracking-wide text-forest">{saved.record.certificateNo}</p>
+          {saved.baptism &&
+          <p className="mt-2 text-sm text-muted">
+              Baptism Reg. No. <span className="font-semibold text-forest">{saved.baptism.certificateNo}</span>
+            </p>
+          }
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             {main && <button type="button" onClick={() => openProfile(main.id)} className={secondaryButton}>View {main.fullName}</button>}
             {other && <button type="button" onClick={() => openProfile(other.id)} className={secondaryButton}>View {other.fullName}</button>}
@@ -192,7 +203,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     <>
       <Modal
         title={`Record ${config.label}`}
-        subtitle={isBaptism ? 'Baptism is how a person enters the register.' : config.description}
+        subtitle={type === 'baptism' ? 'Baptism is how a person enters the register.' : config.description}
         icon={icon}
         onClose={onClose}
         footer={
@@ -206,8 +217,16 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
         }>
         
         <form id="sacrament-form" onSubmit={handleSubmit} noValidate className="space-y-7">
-          {isBaptism ?
-          <BaptismCandidateFields draft={candidate} onChange={setCandidate} errors={candidateErrors} onViewPerson={viewPerson} /> :
+          {isEntry ?
+          <BaptismCandidateFields
+            mode={isConversion ? 'conversion' : 'baptism'}
+            candidateType={candidateType}
+            onCandidateTypeChange={setCandidateType}
+            draft={candidate}
+            onChange={setCandidate}
+            errors={candidateErrors}
+            onViewPerson={viewPerson} /> :
+
 
           <BaptisedPersonPicker
             idPrefix="subject"
@@ -226,13 +245,26 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
           }
 
           <fieldset className="border-t border-line pt-6">
-            <legend className="mb-3 text-sm font-semibold text-forest">{isMarriage ? 'Marriage' : `${config.label} details`}</legend>
+            <legend className="mb-3 text-sm font-semibold text-forest">
+              {isMarriage ? 'Marriage' : isConversion ? 'Reception & baptism' : `${config.label} details`}
+            </legend>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={`Date of ${isMarriage ? 'marriage' : config.label.toLowerCase()}`} htmlFor="d-date" required error={detailErrors.date}>
+              <Field
+                label={isMarriage ? 'Date of marriage' : isConversion ? 'Date received & baptised' : `Date of ${config.label.toLowerCase()}`}
+                htmlFor="d-date"
+                required
+                error={detailErrors.date}>
+                
                 <input id="d-date" type="date" value={details.date} onChange={(e) => setDetail('date', e.target.value)} className={inputClass} />
               </Field>
               {config.extraFields.map((f) =>
-              <Field key={f.key} label={f.label} htmlFor={`d-${f.key}`}>
+              <Field
+                key={f.key}
+                label={f.label}
+                htmlFor={`d-${f.key}`}
+                required={f.key === 'previousReligion'}
+                error={f.key === 'previousReligion' ? detailErrors.previousReligion : undefined}>
+                
                   <input
                   id={`d-${f.key}`}
                   value={details.extra[f.key] ?? ''}
@@ -242,7 +274,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                 
                 </Field>
               )}
-              <Field label="Parish" htmlFor="d-parish" required error={detailErrors.parishId} hint={isBaptism ? 'Also becomes their home parish.' : undefined}>
+              <Field label="Parish" htmlFor="d-parish" required error={detailErrors.parishId} hint={isEntry ? 'Also becomes their home parish.' : undefined}>
                 <select id="d-parish" value={details.parishId} onChange={(e) => setDetail('parishId', e.target.value)} className={inputClass}>
                   <option value="">Select parish…</option>
                   {parishes.map((p) =>
@@ -253,7 +285,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               <Field label={config.ministerLabel} htmlFor="d-minister" required error={detailErrors.minister}>
                 <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
               </Field>
-              <Field label={config.sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
+              <Field label={sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
                 <input id="d-sponsors" value={details.sponsors} placeholder={config.sponsorsPlaceholder} onChange={(e) => setDetail('sponsors', e.target.value)} className={inputClass} />
               </Field>
             </div>

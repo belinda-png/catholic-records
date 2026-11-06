@@ -1,8 +1,9 @@
 import React from "react";
-import { BookOpenIcon, CrossIcon, DropletsIcon, HeartIcon, BoxIcon } from "lucide-react";
+import { BookOpenIcon, CrossIcon, DropletsIcon, HandHeartIcon, HeartIcon, BoxIcon } from "lucide-react";
 import { SacramentType } from "../types/records";
 const icons: Record<SacramentType, BoxIcon> = {
   baptism: DropletsIcon,
+  conversion: HandHeartIcon,
   communion: BookOpenIcon,
   confirmation: CrossIcon,
   matrimony: HeartIcon
