@@ -89,7 +89,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     let pErr: string | undefined;
     if (isEntry) {
       if (!candidate.fullName.trim()) cErr.fullName = 'Enter the full name';
-      if (!candidate.gender) cErr.gender = 'Select gender';
+      // if (!candidate.gender) cErr.gender = 'Select gender';
       if (!candidate.dob) cErr.dob = 'Enter date of birth';
     } else if (!personId) {
       pErr = 'Select a baptised person from the register';
