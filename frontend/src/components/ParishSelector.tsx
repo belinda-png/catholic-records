@@ -11,6 +11,7 @@ interface ParishSelectorProps {
 
 export function ParishSelector({ refreshing, onRefresh }: ParishSelectorProps) {
   const { selectedParishId, setSelectedParishId } = useUI();
+  const { parishes } = useRecords();
   const parish = parishes.find((p) => p.id === selectedParishId);
 
   return (
