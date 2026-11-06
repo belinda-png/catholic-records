@@ -1,54 +1,65 @@
-import { Gender, NewPerson, Person, PersonDraft, PersonDraftErrors } from '../types/records';
+import { NewPerson, Person, PersonDraft, PersonDraftErrors } from '../types/records';
 import { todayISO } from './format';
 
 export function searchPeople(people: Person[], query: string, limit = 5): Person[] {
-  const q = query.trim().toLowerCase();
-  if (q.length < 2) return [];
-  return people.
-  filter((p) => p.fullName.toLowerCase().includes(q) || p.regNo.startsWith(q)).
-  slice(0, limit);
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.join('').length < 2) return [];
+  return people
+    .filter((p) => {
+      const hay = `${p.fullName} ${p.regNo}`.toLowerCase();
+      return words.every((w) => hay.includes(w));
+    })
+    .slice(0, limit);
 }
 
-export function emptyDraft(parishId = '', gender: Gender | '' = ''): PersonDraft {
-  return { fullName: '', regNo: '', gender, dob: '', fatherName: '', motherName: '', parishId, village: '', phone: '' };
+export function emptyDraft(parishId = '', _unused?: unknown): PersonDraft {
+  return {
+    regNo: '', parishId, dateOfBaptism: '', christianName: '', surname: '',
+    dob: '', fatherName: '', motherName: '', godparentName: '',
+    village: '', minister: '', phone: '',
+  };
 }
 
 export function draftFromPerson(p: Person): PersonDraft {
+  const parts = p.fullName.trim().split(/\s+/);
   return {
     personId: p.id,
-    fullName: p.fullName,
     regNo: p.regNo,
-    gender: p.gender,
+    parishId: p.parishId,
+    dateOfBaptism: p.registeredOn,
+    christianName: parts[0] ?? '',
+    surname: parts.slice(1).join(' '),
     dob: p.dob,
     fatherName: p.fatherName,
     motherName: p.motherName,
-    parishId: p.parishId,
+    godparentName: p.godparentName ?? '',
     village: p.village,
-    phone: p.phone
+    minister: '',
+    phone: p.phone,
   };
 }
 
 export function draftToPerson(d: PersonDraft): NewPerson {
   return {
-    fullName: d.fullName.trim(),
-    gender: (d.gender || 'Male') as Gender,
+    fullName: `${d.christianName.trim()} ${d.surname.trim()}`.trim(),
     dob: d.dob,
     fatherName: d.fatherName.trim(),
     motherName: d.motherName.trim(),
+    godparentName: d.godparentName.trim(),
     parishId: d.parishId,
     village: d.village.trim(),
     phone: d.phone.trim(),
-    registeredOn: todayISO()
+    registeredOn: d.dateOfBaptism || todayISO(),
   };
 }
 
 export function validateDraft(d: PersonDraft): PersonDraftErrors {
   const errors: PersonDraftErrors = {};
-  if (!d.fullName.trim()) errors.fullName = 'Enter the full name';
-  if (d.personId) return errors;
-  if (!d.gender) errors.gender = 'Select gender';
-  if (!d.dob) errors.dob = 'Enter date of birth';
-  if (!d.parishId) errors.parishId = 'Choose home parish';
+  if (!d.parishId) errors.parishId = 'Choose the parish';
+  if (!d.regNo.trim()) errors.regNo = 'Enter the registration number';
+  if (!d.dateOfBaptism) errors.dateOfBaptism = 'Enter the date of baptism';
+  if (!d.christianName.trim()) errors.christianName = 'Enter the Christian name';
+  if (!d.surname.trim()) errors.surname = 'Enter the surname';
   return errors;
 }
 
