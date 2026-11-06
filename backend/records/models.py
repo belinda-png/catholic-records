@@ -1,18 +1,18 @@
-from django.db import models
-
-# Create your models here.
+from datetime import date
 
 from django.db import models
-from django.conf import settings
+from django.db.models import Q
+
+
+def age_on(born, on=None):
+    on = on or date.today()
+    return on.year - born.year - ((on.month, on.day) < (born.month, born.day))
 
 
 class Parish(models.Model):
     name = models.CharField(max_length=200, unique=True)
     location = models.CharField(max_length=200, blank=True)
-    archdiocese = models.CharField(
-        max_length=200,
-        default="Tororo Archdiocese"
-    )
+    archdiocese = models.CharField(max_length=200, default="Tororo Archdiocese")
     phone_number = models.CharField(max_length=30, blank=True)
     address = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
@@ -25,73 +25,57 @@ class Parish(models.Model):
         return self.name
 
 
-class Person(models.Model):
-    registration_number = models.CharField(
-        max_length=10,
-        primary_key=True
-            )
+class BaptismRecord(models.Model):
+    """A person enters the register ONLY through their baptism, so the
+    person's details live here. There is no separate Person model."""
+
+    registration_number = models.CharField(max_length=50)
+    parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="baptism_records")
+    date_of_baptism = models.DateField(null=True, blank=True)
     christian_name = models.CharField(max_length=100)
     surname = models.CharField(max_length=100)
     date_of_birth = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=30, blank=True)
-
     father_name = models.CharField(max_length=200, blank=True)
     mother_name = models.CharField(max_length=200, blank=True)
     godparent_name = models.CharField(max_length=200, blank=True)
     residence = models.CharField(max_length=255, blank=True)
+    # The person's home parish (defaults to the baptising parish).
+    home_parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="people",
+                                    null=True, blank=True)
 
-    # The person's home or registering parish.
-    home_parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="people"
-    )
-
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["surname", "christian_name"]
-
-    def __str__(self):
-        return f"{self.christian_name} {self.surname}"
-
-
-class BaptismRecord(models.Model):
-    CHILD, ADULT = "Child", "Adult"
-    CATEGORIES = [(CHILD, "Child"), (ADULT, "Adult")]
-    person = models.ForeignKey(
-        Person,
-        on_delete=models.PROTECT,
-        related_name="baptism_records"
-    )
-    registration_number = models.CharField(
-        max_length=50,
-        primary_key=True
-    )   
     date_of_baptism = models.DateField()
-    parish = models.ForeignKey(
-        Parish,
-        on_delete=models.PROTECT,
-        related_name="baptism_records"
-    )
     minister = models.CharField(max_length=200, blank=True)
+    notes = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-date_of_baptism"]
+        ordering = ["id"]  # same order the records were entered or imported
         constraints = [
-            models.UniqueConstraint(
-                fields=["parish", "registration_number"],
-                name="unique_baptism_register_per_parish"
-            )
+            models.UniqueConstraint(fields=["parish", "registration_number"],
+                                    name="unique_baptism_register_per_parish"),
         ]
 
+    @property
+    def full_name(self):
+        return f"{self.christian_name} {self.surname}"
+
+    @property
+    def age(self):
+        """Age on the day of baptism (None if the date of birth is unknown)."""
+        if not self.date_of_birth:
+            return None
+        return age_on(self.date_of_birth, self.date_of_baptism)
+
+    def save(self, *args, **kwargs):
+        if not self.home_parish_id:
+            self.home_parish = self.parish
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Baptism: {self.person} ({self.registration_number})"
+        return f"{self.full_name} (Baptism No. {self.registration_number})"
 
 
 class CommunionRecord(models.Model):
@@ -112,8 +96,6 @@ class CommunionRecord(models.Model):
 
     def __str__(self):
         return f"First Holy Communion: {self.baptism.full_name}"
-
-
 
 
 class ConfirmationRecord(models.Model):
