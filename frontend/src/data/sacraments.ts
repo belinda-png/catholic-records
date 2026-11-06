@@ -1,5 +1,5 @@
 import { SacramentConfig } from '../types/records';
-import { getParishStore } from './parishStore';
+
 export const sacraments: SacramentConfig[] = [
 {
   type: 'baptism',

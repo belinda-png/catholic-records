@@ -1,5 +1,5 @@
 import { sacraments } from '../data/sacraments';
-import { parishes } from '../data/parishes';
+import { getParishStore } from './parishStore';
 import { SacramentConfig, SacramentRecord, SacramentType } from '../types/records';
 
 export function getSacrament(type: SacramentType): SacramentConfig {
@@ -11,7 +11,7 @@ export function toneClass(type: SacramentType): string {
 }
 
 export function parishName(id: string): string {
-  return parishes.find((p) => p.id === id)?.name ?? '—';
+  return getParishStore().find((p) => p.id === id)?.name ?? '—';
 }
 
 export function shortParishName(id: string): string {
