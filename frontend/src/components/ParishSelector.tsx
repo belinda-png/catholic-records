@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronDownIcon, MapPinIcon, RefreshCwIcon } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
-import { parishes } from '../data/parishes';
+import { useRecords } from '../contexts/RecordsContext';
 import { secondaryButton } from '../utils/styles';
 
 interface ParishSelectorProps {
