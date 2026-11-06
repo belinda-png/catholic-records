@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { NewPerson, NewRecord, Parish, Person, PersonDraft, SacramentRecord } from '../types/records';
+import { AppDocument, NewPerson, NewRecord, Parish, Person, PersonDraft, SacramentRecord } from '../types/records'; // changed: AppDocument added
 import {
   fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes,
   postBaptism, postCommunion, postConfirmation, postMatrimony,
@@ -15,6 +15,7 @@ interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
   records: SacramentRecord[];
+  documents: AppDocument[]; // new
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
@@ -25,6 +26,9 @@ interface RecordsContextValue {
   // Still in-memory only (used by ImportModal)
   addPerson: (input: NewPerson) => Person;
   addRecord: (input: NewRecord) => SacramentRecord;
+  // Still in-memory only (used by DocumentsModal)
+  addDocument: (d: Omit<AppDocument, 'id'>) => void; // new
+  removeDocument: (id: string) => void; // new
 }
 
 const RecordsContext = createContext<RecordsContextValue | null>(null);
@@ -33,6 +37,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [records, setRecords] = useState<SacramentRecord[]>([]);
+  const [documents, setDocuments] = useState<AppDocument[]>([]); // new
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const peopleRef = useRef<Person[]>([]);
@@ -154,9 +159,25 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     return record;
   }, []);
 
+  // new: in-memory only (DocumentsModal). Lost on refresh.
+  const addDocument = useCallback(
+    (d: Omit<AppDocument, 'id'>) => setDocuments((prev) => [{ ...d, id: makeId('d') }, ...prev]),
+    []
+  );
+  const removeDocument = useCallback(
+    (id: string) => setDocuments((prev) => prev.filter((d) => d.id !== id)),
+    []
+  );
+
   const value = useMemo(
-    () => ({ parishes, people, records, loading, error, reload, getPerson, recordsFor, createBaptism, createSacrament, addPerson, addRecord }),
-    [parishes, people, records, loading, error, reload, getPerson, recordsFor, createBaptism, createSacrament, addPerson, addRecord]
+    () => ({
+      parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
+      createBaptism, createSacrament, addPerson, addRecord, addDocument, removeDocument,
+    }),
+    [
+      parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
+      createBaptism, createSacrament, addPerson, addRecord, addDocument, removeDocument,
+    ]
   );
 
   return <RecordsContext.Provider value={value}>{children}</RecordsContext.Provider>;

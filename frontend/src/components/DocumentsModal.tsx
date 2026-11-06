@@ -4,7 +4,7 @@ import { AlertCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, FolderOpenIcon, I
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
 import { documentCategories } from '../data/documentCategories';
-import { parishes } from '../data/parishes';
+// import { parishes } from '../data/parishes';
 import { acceptAttr, documentExtensions, extensionOf, formatBytes, isImage } from '../utils/files';
 import { formatDate, todayISO } from '../utils/format';
 import { shortParishName } from '../utils/sacraments';
@@ -19,7 +19,7 @@ interface DocumentsModalProps {
 }
 
 export function DocumentsModal({ onClose }: DocumentsModalProps) {
-  const { documents, people, getPerson, addDocument, removeDocument } = useRecords();
+  const { parishes, documents, people, getPerson, addDocument, removeDocument } = useRecords();
   const { selectedParishId } = useUI();
   const [category, setCategory] = useState(documentCategories[0]);
   const [parishId, setParishId] = useState(selectedParishId === 'all' ? '' : selectedParishId);
