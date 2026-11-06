@@ -3,10 +3,9 @@ import { AnimatePresence } from 'framer-motion';
 import { AlertTriangleIcon, CheckIcon, Loader2Icon } from 'lucide-react';
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
-import { parishes } from '../data/parishes';
 import { CandidateType, PersonDraft, PersonDraftErrors, SacramentRecord, SacramentType, SpouseDraft } from '../types/records';
 import { formatDate } from '../utils/format';
-import { draftToPerson, emptyDraft } from '../utils/people';
+import { emptyDraft } from '../utils/people';
 import { checkEligibility, getSacrament, isEntryType, toneClass } from '../utils/sacraments';
 import { inputClass, primaryButton, secondaryButton } from '../utils/styles';
 import { BaptisedPersonPicker } from './BaptisedPersonPicker';
@@ -39,7 +38,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const isEntry = isEntryType(type);
   const isConversion = type === 'conversion';
   const isMarriage = type === 'matrimony';
-  const { getPerson, addPerson, addRecord, recordsFor } = useRecords();
+  const { parishes, getPerson, createBaptism, createSacrament, recordsFor } = useRecords();
   const { selectedParishId, openProfile, openSacrament } = useUI();
   const defaultParish = selectedParishId === 'all' ? '' : selectedParishId;
   const emptyDetails: Details = { parishId: defaultParish, date: '', minister: '', sponsors: '', notes: '', extra: {} };
@@ -55,6 +54,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const [personError, setPersonError] = useState<string>();
   const [spouseError, setSpouseError] = useState<string>();
   const [detailErrors, setDetailErrors] = useState<DetailErrors>({});
+  const [submitError, setSubmitError] = useState<string>();
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [saved, setSaved] = useState<{record: SacramentRecord;baptism?: SacramentRecord;} | null>(null);
   const [peek, setPeek] = useState<string[]>([]);
@@ -88,8 +88,10 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     const cErr: PersonDraftErrors = {};
     let pErr: string | undefined;
     if (isEntry) {
-      if (!candidate.fullName.trim()) cErr.fullName = 'Enter the full name';
-      // if (!candidate.gender) cErr.gender = 'Select gender';
+      if (!candidate.regNo.trim()) cErr.regNo = 'Enter the registration number';
+      if (!candidate.dateOfBaptism) cErr.dateOfBaptism = 'Enter the date of baptism';
+      if (!candidate.christianName.trim()) cErr.christianName = 'Enter the Christian name';
+      if (!candidate.surname.trim()) cErr.surname = 'Enter the surname';
       if (!candidate.dob) cErr.dob = 'Enter date of birth';
     } else if (!personId) {
       pErr = 'Select a baptised person from the register';
@@ -97,8 +99,8 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     const sErr = isMarriage && !spouse.fullName.trim() ? "Enter the spouse's name" : undefined;
     const dErr: DetailErrors = {};
     if (!details.parishId) dErr.parishId = 'Choose the parish';
-    if (!details.date) dErr.date = 'Enter the date';
-    if (!details.minister.trim()) dErr.minister = 'Enter the minister';
+    if (!isEntry && !details.date) dErr.date = 'Enter the date';
+    if (!isEntry && !details.minister.trim()) dErr.minister = 'Enter the minister';
     if (isConversion && !details.extra.previousReligion?.trim()) dErr.previousReligion = 'Enter their previous religion';
     setCandidateErrors(cErr);
     setPersonError(pErr);
@@ -107,33 +109,46 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     if (Object.keys(cErr).length || pErr || sErr || Object.keys(dErr).length) return;
 
     setStatus('saving');
-    window.setTimeout(() => {
-      const subjectId = isEntry ? addPerson(draftToPerson({ ...candidate, parishId: details.parishId })).id : personId as string;
-      const common = {
-        personId: subjectId,
-        parishId: details.parishId,
-        date: details.date,
-        minister: details.minister.trim(),
-        sponsors: details.sponsors.trim()
-      };
-      let extra = details.extra;
-      if (type === 'baptism') extra = { ...extra, candidateType };
-      if (isMarriage) {
-        extra = {
-          ...extra,
-          spouseName: spouse.fullName.trim(),
-          spouseBaptisedAt: spouse.baptisedAt,
-          spouseBaptisedOn: spouse.baptisedOn,
-          spouseBaptismRegNo: spouse.baptismRegNo
-        };
+    setSubmitError(undefined);
+    (async () => {
+      try {
+        if (isEntry) {
+          const { record } = await createBaptism(
+            { ...candidate, parishId: details.parishId },
+            details.notes.trim()
+          );
+          setSaved({ record });
+        } else {
+          let extra = details.extra;
+          if (isMarriage) {
+            extra = {
+              ...extra,
+              spouseName: spouse.fullName.trim(),
+              spouseBaptisedAt: spouse.baptisedAt,
+              spouseBaptisedOn: spouse.baptisedOn,
+              spouseBaptismRegNo: spouse.baptismRegNo
+            };
+          }
+          const record = await createSacrament({
+            personId: personId as string,
+            parishId: details.parishId,
+            date: details.date,
+            minister: details.minister.trim(),
+            sponsors: details.sponsors.trim(),
+            type,
+            spouseId: isMarriage ? spouse.personId : undefined,
+            notes: details.notes.trim(),
+            extra
+          });
+          setSaved({ record });
+        }
+        setStatus('saved');
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err instanceof Error ? err.message : 'Could not save the record');
+        setStatus('idle');
       }
-      const record = addRecord({ ...common, type, spouseId: isMarriage ? spouse.personId : undefined, notes: details.notes.trim(), extra });
-      const baptism = isConversion ?
-      addRecord({ ...common, type: 'baptism', notes: 'Baptised on reception into the Catholic Church', extra: { candidateType: 'adult', conversion: 'yes' } }) :
-      undefined;
-      setSaved({ record, baptism });
-      setStatus('saved');
-    }, 500);
+    })();
   };
 
   const icon =
@@ -249,6 +264,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               {isMarriage ? 'Marriage' : isConversion ? 'Reception & baptism' : `${config.label} details`}
             </legend>
             <div className="grid gap-4 sm:grid-cols-2">
+              {!isEntry &&
               <Field
                 label={isMarriage ? 'Date of marriage' : isConversion ? 'Date received & baptised' : `Date of ${config.label.toLowerCase()}`}
                 htmlFor="d-date"
@@ -257,6 +273,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                 
                 <input id="d-date" type="date" value={details.date} onChange={(e) => setDetail('date', e.target.value)} className={inputClass} />
               </Field>
+              }
               {config.extraFields.map((f) =>
               <Field
                 key={f.key}
@@ -282,12 +299,16 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                   )}
                 </select>
               </Field>
+              {!isEntry &&
               <Field label={config.ministerLabel} htmlFor="d-minister" required error={detailErrors.minister}>
                 <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
               </Field>
+              }
+              {!isEntry &&
               <Field label={sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
                 <input id="d-sponsors" value={details.sponsors} placeholder={config.sponsorsPlaceholder} onChange={(e) => setDetail('sponsors', e.target.value)} className={inputClass} />
               </Field>
+              }
             </div>
           </fieldset>
 
@@ -298,7 +319,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               onChange={setSpouse}
               error={spouseError}
               excludeId={personId}
-              preferredGender={person?.gender === 'Female' ? 'Male' : person?.gender === 'Male' ? 'Female' : undefined}
               onViewPerson={viewPerson} />
             
             </div>
@@ -313,6 +333,10 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                 </p>
             )}
             </div>
+          }
+
+          {submitError &&
+          <p className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-danger" role="alert">{submitError}</p>
           }
 
           <Field label="Notes" htmlFor="d-notes">
