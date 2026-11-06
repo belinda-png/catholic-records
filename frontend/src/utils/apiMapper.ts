@@ -11,9 +11,7 @@ export const mapPerson = (b: any): Person => ({
   id: String(b.id),
   regNo: b.registration_number,
   fullName: `${b.christian_name} ${b.surname}`.trim(),
-  gender: 'Male', // no gender field in Django yet
-  dob: b.date_of_birth ?? '',
-  fatherName: b.father_name ?? '',
+//   gender: 'Male',
   motherName: b.mother_name ?? '',
   parishId: String(b.home_parish ?? b.parish),
   village: b.residence ?? '',
