@@ -59,7 +59,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const [saved, setSaved] = useState<{record: SacramentRecord;baptism?: SacramentRecord;} | null>(null);
   const [peek, setPeek] = useState<string[]>([]);
 
-  const person = personId ? getPerson(personId) : undefined;
+  // const person = personId ? getPerson(personId) : undefined;
   const viewPerson = (id: string) => setPeek([id]);
   const sponsorsLabel = type === 'baptism' && candidateType === 'adult' ? 'Sponsor' : config.sponsorsLabel;
 
