@@ -7,12 +7,15 @@ export const mapParish = (p: any): Parish => ({
 });
 
 // A baptism record IS the person.
+// A baptism record IS the person.
 export const mapPerson = (b: any): Person => ({
   id: String(b.id),
   regNo: b.registration_number,
   fullName: `${b.christian_name} ${b.surname}`.trim(),
-//   gender: 'Male',
+  dob: b.date_of_birth ?? '',
+  fatherName: b.father_name ?? '',
   motherName: b.mother_name ?? '',
+  godparentName: b.godparent_name ?? '',
   parishId: String(b.home_parish ?? b.parish),
   village: b.residence ?? '',
   phone: b.phone_number ?? '',

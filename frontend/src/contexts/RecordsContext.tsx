@@ -1,22 +1,15 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { NewPerson, NewRecord, Parish, Person, SacramentRecord } from '../types/records';
-import { generateRegNo, makeId } from '../utils/people';
-import { getSacrament } from '../utils/sacraments';
+import { NewPerson, NewRecord, Parish, Person, PersonDraft, SacramentRecord } from '../types/records';
 import {
-  fetchBaptisms,
-  fetchCommunions,
-  fetchConfirmations,
-  fetchMatrimonies,
-  fetchParishes,
+  fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes,
+  postBaptism, postCommunion, postConfirmation, postMatrimony,
 } from '../api';
 import {
-  mapBaptism,
-  mapCommunion,
-  mapConfirmation,
-  mapMatrimony,
-  mapParish,
-  mapPerson,
+  mapBaptism, mapCommunion, mapConfirmation, mapMatrimony, mapParish, mapPerson,
 } from '../utils/apiMappers';
+import { generateRegNo, makeId } from '../utils/people';
+import { getSacrament } from '../utils/sacraments';
+import { setParishStore } from '../utils/parishStore';
 
 interface RecordsContextValue {
   parishes: Parish[];
@@ -27,6 +20,9 @@ interface RecordsContextValue {
   reload: () => Promise<void>;
   getPerson: (id: string) => Person | undefined;
   recordsFor: (personId: string) => SacramentRecord[];
+  createBaptism: (draft: PersonDraft, notes?: string) => Promise<{ person: Person; record: SacramentRecord }>;
+  createSacrament: (rec: NewRecord) => Promise<SacramentRecord>;
+  // Still in-memory only (used by ImportModal)
   addPerson: (input: NewPerson) => Person;
   addRecord: (input: NewRecord) => SacramentRecord;
 }
@@ -42,40 +38,38 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   const peopleRef = useRef<Person[]>([]);
   const recordsRef = useRef<SacramentRecord[]>([]);
 
+  const load = useCallback(async () => {
+    const [pa, ba, co, cf, ma] = await Promise.all([
+      fetchParishes(), fetchBaptisms(), fetchCommunions(), fetchConfirmations(), fetchMatrimonies(),
+    ]);
+    const loadedParishes = pa.map(mapParish);
+    const loadedPeople = ba.map(mapPerson);
+    const loadedRecords = [
+      ...ba.map(mapBaptism), ...co.map(mapCommunion),
+      ...cf.map(mapConfirmation), ...ma.map(mapMatrimony),
+    ];
+    setParishStore(loadedParishes);
+    peopleRef.current = loadedPeople;
+    recordsRef.current = loadedRecords;
+    setParishes(loadedParishes);
+    setPeople(loadedPeople);
+    setRecords(loadedRecords);
+  }, []);
+
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [pa, ba, co, cf, ma] = await Promise.all([
-        fetchParishes(),
-        fetchBaptisms(),
-        fetchCommunions(),
-        fetchConfirmations(),
-        fetchMatrimonies(),
-      ]);
-      const loadedPeople = ba.map(mapPerson);
-      const loadedRecords = [
-        ...ba.map(mapBaptism),
-        ...co.map(mapCommunion),
-        ...cf.map(mapConfirmation),
-        ...ma.map(mapMatrimony),
-      ];
-      peopleRef.current = loadedPeople;
-      recordsRef.current = loadedRecords;
-      setParishes(pa.map(mapParish));
-      setPeople(loadedPeople);
-      setRecords(loadedRecords);
+      await load();
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : 'Could not load records');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [load]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const getPerson = useCallback((id: string) => peopleRef.current.find((p) => p.id === id), []);
 
@@ -84,7 +78,61 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // NOTE: these two still save only in browser memory. We connect them to Django next.
+  const createBaptism = useCallback(async (d: PersonDraft, notes = '') => {
+    const created = await postBaptism({
+      registration_number: d.regNo.trim(),
+      parish: Number(d.parishId),
+      home_parish: Number(d.parishId),
+      christian_name: d.christianName.trim(),
+      surname: d.surname.trim(),
+      date_of_birth: d.dob || null,
+      date_of_baptism: d.dateOfBaptism,
+      father_name: d.fatherName.trim(),
+      mother_name: d.motherName.trim(),
+      godparent_name: d.godparentName.trim(),
+      residence: d.village.trim(),
+      phone_number: d.phone.trim(),
+      minister: d.minister.trim(),
+      notes,
+    });
+    await load();
+    return { person: mapPerson(created), record: mapBaptism(created) };
+  }, [load]);
+
+  const createSacrament = useCallback(async (rec: NewRecord) => {
+    let created: any;
+    let mapped: SacramentRecord;
+    if (rec.type === 'communion') {
+      created = await postCommunion({
+        baptism: Number(rec.personId), parish: Number(rec.parishId),
+        date_received: rec.date, minister: rec.minister,
+      });
+      mapped = mapCommunion(created);
+    } else if (rec.type === 'confirmation') {
+      created = await postConfirmation({
+        baptism: Number(rec.personId), parish: Number(rec.parishId),
+        date_received: rec.date, minister: rec.minister,
+      });
+      mapped = mapConfirmation(created);
+    } else if (rec.type === 'matrimony') {
+      created = await postMatrimony({
+        baptism: Number(rec.personId),
+        spouse_baptism: rec.spouseId ? Number(rec.spouseId) : null,
+        spouse_name: rec.extra.spouseName ?? '',
+        spouse_baptism_registration_number: rec.extra.spouseBaptismRegNo ?? '',
+        parish: Number(rec.parishId),
+        date_of_marriage: rec.date,
+        notes: rec.notes,
+      });
+      mapped = mapMatrimony(created);
+    } else {
+      throw new Error(`Saving ${rec.type} records is not supported yet`);
+    }
+    await load();
+    return mapped;
+  }, [load]);
+
+  // In-memory only (ImportModal). Not saved to Django yet.
   const addPerson = useCallback((input: NewPerson) => {
     const person: Person = { ...input, id: makeId('p'), regNo: generateRegNo(peopleRef.current) };
     peopleRef.current = [person, ...peopleRef.current];
@@ -107,8 +155,8 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ parishes, people, records, loading, error, reload, getPerson, recordsFor, addPerson, addRecord }),
-    [parishes, people, records, loading, error, reload, getPerson, recordsFor, addPerson, addRecord]
+    () => ({ parishes, people, records, loading, error, reload, getPerson, recordsFor, createBaptism, createSacrament, addPerson, addRecord }),
+    [parishes, people, records, loading, error, reload, getPerson, recordsFor, createBaptism, createSacrament, addPerson, addRecord]
   );
 
   return <RecordsContext.Provider value={value}>{children}</RecordsContext.Provider>;
