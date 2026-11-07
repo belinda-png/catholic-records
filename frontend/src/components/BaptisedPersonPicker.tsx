@@ -69,7 +69,7 @@ export function BaptisedPersonPicker({ idPrefix, heading, type, personId, onChan
     const baptism = recordsFor(selected.id).find((r) => r.type === 'baptism');
     const facts = [
     // { label: 'Gender', value: selected.gender },
-    {label: ''}
+     { label: 'Registration number', value: selected.regNo },
     { label: 'Date of birth', value: formatDate(selected.dob) },
     { label: 'Home parish', value: shortParishName(selected.parishId) },
     { label: "Father's name", value: selected.fatherName || '—' },
