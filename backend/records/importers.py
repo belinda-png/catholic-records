@@ -71,6 +71,21 @@ def name_from(row):
     return name
 
 
+def split_name(row):
+    """Return (christian_name, surname) for a spreadsheet row."""
+    first = text(pick(row, "christianname", "firstname", "first", "givenname", "baptismalname"))
+    last = text(pick(row, "surname", "lastname", "last", "familyname"))
+    if first and last:
+        return first, last
+
+    parts = name_from(row).split()
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], parts[0]
+    return parts[0], " ".join(parts[1:])
+
+
 def status_from(value):
     s = text(value).lower()
     if "not" in s or "need" in s:
