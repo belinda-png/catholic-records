@@ -1,101 +1,20 @@
-
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from .views import (
-    ParishListView,
-    parish_statistics,
-    PersonSearchView,
-    person_sacramental_history,
-    BaptismListCreateView,
-    BaptismDetailView,
-    CommunionListCreateView,
-    CommunionDetailView,
-    ConfirmationListCreateView,
-    ConfirmationDetailView,
-    MatrimonyListCreateView,
-    MatrimonyDetailView,
+    ParishViewSet,
+    BaptismViewSet,
+    CommunionViewSet,
+    ConfirmationViewSet,
+    MatrimonyViewSet,
+    DocumentViewSet,
 )
 
-urlpatterns = [
-    # Existing dashboard endpoints
-     path("parishes/", ParishListView.as_view(), name="parish-list"),
-    path(
-        "parishes/<int:parish_id>/statistics/",
-        parish_statistics,
-        name="parish-statistics",
-    ),
-    path("people/search/", PersonSearchView.as_view(), name="person-search"),
-    path(
-        "people/<int:person_id>/history/",
-        person_sacramental_history,
-        name="person-sacramental-history",
-    ),
-    path(
-        "parishes/",
-        ParishListView.as_view(),
-        name="parish-list",
-    ),
-    path(
-        "parishes/<int:parish_id>/statistics/",
-        parish_statistics,
-        name="parish-statistics",
-    ),
-    path(
-        "people/search/",
-        PersonSearchView.as_view(),
-        name="person-search",
-    ),
-    path(
-        "people/<int:person_id>/history/",
-        person_sacramental_history,
-        name="person-sacramental-history",
-    ),
+router = DefaultRouter()
+router.register("parishes", ParishViewSet, basename="parish")
+router.register("baptisms", BaptismViewSet, basename="baptism")
+router.register("communions", CommunionViewSet, basename="communion")
+router.register("confirmations", ConfirmationViewSet, basename="confirmation")
+router.register("matrimonies", MatrimonyViewSet, basename="matrimony")
+router.register("documents", DocumentViewSet, basename="document")
 
-    # Baptism records
-    path(
-        "baptisms/",
-        BaptismListCreateView.as_view(),
-        name="baptism-list-create",
-    ),
-    path(
-        "baptisms/<int:pk>/",
-        BaptismDetailView.as_view(),
-        name="baptism-detail",
-    ),
-
-    # First Holy Communion records
-    path(
-        "communions/",
-        CommunionListCreateView.as_view(),
-        name="communion-list-create",
-    ),
-    path(
-        "communions/<int:pk>/",
-        CommunionDetailView.as_view(),
-        name="communion-detail",
-    ),
-
-    # Confirmation records
-    path(
-        "confirmations/",
-        ConfirmationListCreateView.as_view(),
-        name="confirmation-list-create",
-    ),
-    path(
-        "confirmations/<int:pk>/",
-        ConfirmationDetailView.as_view(),
-        name="confirmation-detail",
-    ),
-
-    # Matrimony records
-    path(
-        "matrimonies/",
-        MatrimonyListCreateView.as_view(),
-        name="matrimony-list-create",
-    ),
-    path(
-        "matrimonies/<int:pk>/",
-        MatrimonyDetailView.as_view(),
-        name="matrimony-detail",
-    ),
-]
+urlpatterns = router.urls
