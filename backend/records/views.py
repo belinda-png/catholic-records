@@ -127,7 +127,6 @@ def build_baptism(row, ctx):
         mother_name=text(pick(row, "mother", "mothername")),
         godparent_name=text(pick(row, "godparent", "godparentname", "sponsor")),
         residence=text(pick(row, "residence", "address", "village")),
-        date_of_baptism=date_of_baptism,
         minister=text(pick(row, "minister", "priest")),
         notes=text(pick(row, "notes", "remarks")),
     )
