@@ -45,3 +45,4 @@ export function checkEligibility(type: SacramentType, recs: SacramentRecord[]): 
   }
   return { ok: true };
 }
+export const isEntryType = (type: string) => type === 'baptism' || type === 'conversion';z

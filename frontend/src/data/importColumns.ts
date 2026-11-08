@@ -5,8 +5,7 @@ export interface ImportColumn {
   header: string;  // what the person sees and what the template contains
   required?: boolean;
 }
-
-export const importColumns: Record<SacramentType, ImportColumn[]> = {
+export const importColumns: Partial<Record<SacramentType, ImportColumn[]>> = {
   baptism: [
     { key: 'regno', header: 'Reg No', required: true },
     { key: 'dateofbaptism', header: 'Date of baptism', required: true },
