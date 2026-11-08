@@ -4,6 +4,8 @@ import { SacramentType } from '../types/records';
 export type ModalState =
 {kind: 'none';} |
 {kind: 'sacrament';type: SacramentType;personId?: string;} |
+{kind: 'import';type: SacramentType;} |
+{kind: 'documents';} |
 {kind: 'profile';stack: string[];};
 
 interface UIContextValue {
@@ -11,6 +13,8 @@ interface UIContextValue {
   setSelectedParishId: (id: string) => void;
   modal: ModalState;
   openSacrament: (type: SacramentType, personId?: string) => void;
+  openImport: (type: SacramentType) => void;
+  openDocuments: () => void;
   openProfile: (personId: string) => void;
   backProfile: () => void;
   closeModal: () => void;
@@ -23,6 +27,8 @@ export function UIProvider({ children }: {children: ReactNode;}) {
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
 
   const openSacrament = useCallback((type: SacramentType, personId?: string) => setModal({ kind: 'sacrament', type, personId }), []);
+  const openImport = useCallback((type: SacramentType) => setModal({ kind: 'import', type }), []);
+  const openDocuments = useCallback(() => setModal({ kind: 'documents' }), []);
   const openProfile = useCallback(
     (personId: string) =>
     setModal((prev) =>
@@ -40,8 +46,8 @@ export function UIProvider({ children }: {children: ReactNode;}) {
   const closeModal = useCallback(() => setModal({ kind: 'none' }), []);
 
   const value = useMemo(
-    () => ({ selectedParishId, setSelectedParishId, modal, openSacrament, openProfile, backProfile, closeModal }),
-    [selectedParishId, modal, openSacrament, openProfile, backProfile, closeModal]
+    () => ({ selectedParishId, setSelectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal }),
+    [selectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal]
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
