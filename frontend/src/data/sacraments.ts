@@ -15,8 +15,8 @@ export const sacraments: SacramentConfig[] = [
 },
 {
   type: 'conversion',
-  label: 'Conversion',
-  plural: 'Conversions',
+  label: 'Convert',
+  plural: 'Converts',
   short: 'CNV',
   description: 'Record a person baptised elsewhere who is received into the Catholic Church and baptised here.',
   ministerLabel: 'Receiving minister',
@@ -59,5 +59,5 @@ export const sacraments: SacramentConfig[] = [
   sponsorsLabel: 'Witnesses',
   sponsorsPlaceholder: 'e.g. Simon Opio, Lucy Nekesa',
   tone: 'gold',
-  extraFields: [{ key: 'marriageRegNo', label: 'Marriage Reg. No.', placeholder: 'e.g. 0019' }]
+  extraFields: [{ key: 'marriageRegNo', label: 'Reg No', placeholder: 'e.g. 0019' }]
 }];

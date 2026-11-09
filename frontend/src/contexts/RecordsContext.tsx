@@ -135,15 +135,16 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
       });
       mapped = mapConfirmation(created);
     } else if (rec.type === 'matrimony') {
-      created = await postMatrimony({
-        baptism: Number(rec.personId),
-        spouse_baptism: rec.spouseId ? Number(rec.spouseId) : null,
-        spouse_name: rec.extra.spouseName ?? '',
-        spouse_baptism_registration_number: rec.extra.spouseBaptismRegNo ?? '',
-        parish: Number(rec.parishId),
-        date_of_marriage: rec.date,
-        notes: rec.notes,
-      });
+    created = await postMatrimony({
+      baptism: Number(rec.personId),
+      spouse_baptism: rec.spouseId ? Number(rec.spouseId) : null,
+      spouse_name: rec.extra.spouseName ?? '',
+      spouse_baptism_registration_number: rec.extra.spouseBaptismRegNo ?? '',
+      registration_number: rec.extra.marriageRegNo ?? '',
+      parish: Number(rec.parishId),
+      date_of_marriage: rec.date,
+      notes: rec.notes,
+    });
       mapped = mapMatrimony(created);
     } else {
       throw new Error(`Saving ${rec.type} records is not supported yet`);

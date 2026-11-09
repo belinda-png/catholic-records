@@ -104,7 +104,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     const dErr: DetailErrors = {};
     if (!details.parishId) dErr.parishId = 'Choose the parish';
     if (!isEntry && !details.date) dErr.date = 'Enter the date';
-    if (!isEntry && !details.minister.trim()) dErr.minister = 'Enter the minister';
+    if (!isEntry && !isMarriage && !details.minister.trim()) dErr.minister = 'Enter the minister';
     if (isConversion && !details.extra.previousReligion?.trim()) dErr.previousReligion = 'Enter their previous religion';
     setCandidateErrors(cErr);
     setPersonError(pErr);
@@ -292,14 +292,9 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                   )}
                 </select>
               </Field>
-              {!isEntry &&
-              <Field label={config.ministerLabel} htmlFor="d-minister" required error={detailErrors.minister}>
+              {!isEntry && !isMarriage &&
+              <Field label="Minister" htmlFor="d-minister" required error={detailErrors.minister}>
                 <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
-              </Field>
-              }
-              {!isEntry &&
-              <Field label={config.sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
-                <input id="d-sponsors" value={details.sponsors} placeholder={config.sponsorsPlaceholder} onChange={(e) => setDetail('sponsors', e.target.value)} className={inputClass} />
               </Field>
               }
             </div>

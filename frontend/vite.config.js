@@ -11,3 +11,27 @@ export default defineConfig({
     },
   },
 });
+// import { VitePWA } from "vite-plugin-pwa";
+// npm install -D vite-plugin-pwa
+
+// export default defineConfig({
+//   plugins: [
+//     react(),
+//     tailwindcss(),
+//     VitePWA({
+//       registerType: "autoUpdate",
+//       manifest: {
+//         name: "Sacramental Records",
+//         short_name: "Parish Records",
+//         theme_color: "#0f3a2a",
+//         background_color: "#f6f3ea",
+//         display: "standalone",
+//         icons: [
+//           { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+//           { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+//         ],
+//       },
+//     }),
+//   ],
+//   // keep your server/proxy section
+// });
