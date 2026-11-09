@@ -1,15 +1,14 @@
-import { NewPerson, NewRecord, Person, SacramentRecord, SacramentType } from '../types/records';
+import { NewPerson, NewRecord, Person, PersonDraft, SacramentRecord, SacramentType } from '../types/records';
 import { importColumns } from '../data/importColumns';
 import { checkEligibility, isEntryType } from './sacraments';
 import { getParishStore } from './parishStore';
-
 export interface ImportRow {
   line: number;       // row number in the spreadsheet (header is row 1)
   ok: boolean;
   name: string;
   detail: string;
   message: string;
-  payload?: { person?: NewPerson; personId?: string; records: NewRecord[] };
+  payload?: { person?: NewPerson; draft?: PersonDraft; personId?: string; records: NewRecord[] };
 }
 
 type Raw = Record<string, string>;
@@ -113,6 +112,12 @@ export function planImport(type: SacramentType, raw: Raw[], ctx: PlanContext): I
             village: row.residence ?? '',
             phone: row.phone ?? '',
             registeredOn: date,
+          },
+          draft: {
+            regNo, parishId, dateOfBaptism: date, christianName: christian, surname,
+            dob: toISO(row.dateofbirth), fatherName: row.father ?? '', motherName: row.mother ?? '',
+            godparentName: row.godparent ?? '', village: row.residence ?? '',
+            minister: row.minister ?? '', phone: row.phone ?? '',
           },
           records: [{
             type: 'baptism', personId: '', parishId, date,
