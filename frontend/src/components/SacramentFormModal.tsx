@@ -56,12 +56,10 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const [detailErrors, setDetailErrors] = useState<DetailErrors>({});
   const [submitError, setSubmitError] = useState<string>();
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [saved, setSaved] = useState<{record: SacramentRecord;baptism?: SacramentRecord;} | null>(null);
+  const [saved, setSaved] = useState<SacramentRecord | null>(null);
   const [peek, setPeek] = useState<string[]>([]);
 
-  // const person = personId ? getPerson(personId) : undefined;
   const viewPerson = (id: string) => setPeek([id]);
-  const sponsorsLabel = type === 'baptism' && candidateType === 'adult' ? 'Sponsor' : config.sponsorsLabel;
 
   const warnings: string[] = [];
   if (isMarriage) {
@@ -76,9 +74,15 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
 
   const reset = () => {
     setCandidate(emptyDraft(defaultParish));
+    setCandidateType(isConversion ? 'adult' : 'child');
     setPersonId(undefined);
     setSpouse(emptySpouse);
     setDetails(emptyDetails);
+    setCandidateErrors({});
+    setPersonError(undefined);
+    setSpouseError(undefined);
+    setDetailErrors({});
+    setSubmitError(undefined);
     setSaved(null);
     setStatus('idle');
   };
@@ -113,12 +117,12 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     (async () => {
       try {
         if (isEntry) {
-        const { record } = await createBaptism(
-          { ...candidate, parishId: details.parishId },
-          details.notes.trim(),
-          isConversion ? { previousReligion: details.extra.previousReligion ?? '' } : undefined
-        );
-          setSaved({ record });
+          const { record } = await createBaptism(
+            { ...candidate, parishId: details.parishId },
+            details.notes.trim(),
+            isConversion ? { previousReligion: details.extra.previousReligion.trim() } : undefined
+          );
+          setSaved(record);
         } else {
           let extra = details.extra;
           if (isMarriage) {
@@ -141,7 +145,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             notes: details.notes.trim(),
             extra
           });
-          setSaved({ record });
+          setSaved(record);
         }
         setStatus('saved');
       } catch (err) {
@@ -157,7 +161,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       <SacramentIcon type={type} className="h-5 w-5" />
     </span>;
 
-
   const peekLayer =
   <AnimatePresence>
       {peek.length > 0 &&
@@ -167,14 +170,12 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       onClose={() => setPeek([])}
       onOpenPerson={(id) => setPeek((s) => [...s, id])}
       onBack={() => setPeek((s) => s.slice(0, -1))} />
-
     }
     </AnimatePresence>;
 
-
   if (status === 'saved' && saved) {
-    const main = getPerson(saved.record.personId);
-    const other = saved.record.spouseId ? getPerson(saved.record.spouseId) : undefined;
+    const main = getPerson(saved.personId);
+    const other = saved.spouseId ? getPerson(saved.spouseId) : undefined;
     return (
       <Modal
         title={`${config.label} recorded`}
@@ -188,7 +189,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             <button type="button" onClick={onClose} className={primaryButton}>Done</button>
           </>
         }>
-        
+
         <div className="flex flex-col items-center py-4 text-center">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-sage text-sage-ink">
             <CheckIcon className="h-7 w-7" />
@@ -200,19 +201,13 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             </>
           }
           <p className="mt-4 text-sm text-muted">{config.label} Reg. No.</p>
-          <p className="text-2xl font-semibold tracking-wide text-forest">{saved.record.certificateNo}</p>
-          {saved.baptism &&
-          <p className="mt-2 text-sm text-muted">
-              Baptism Reg. No. <span className="font-semibold text-forest">{saved.baptism.certificateNo}</span>
-            </p>
-          }
+          <p className="text-2xl font-semibold tracking-wide text-forest">{saved.certificateNo}</p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             {main && <button type="button" onClick={() => openProfile(main.id)} className={secondaryButton}>View {main.fullName}</button>}
             {other && <button type="button" onClick={() => openProfile(other.id)} className={secondaryButton}>View {other.fullName}</button>}
           </div>
         </div>
       </Modal>);
-
   }
 
   return (
@@ -231,7 +226,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             </button>
           </>
         }>
-        
+
         <form id="sacrament-form" onSubmit={handleSubmit} noValidate className="space-y-7">
           {isEntry ?
           <BaptismCandidateFields
@@ -242,7 +237,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             onChange={setCandidate}
             errors={candidateErrors}
             onViewPerson={viewPerson} /> :
-
 
           <BaptisedPersonPicker
             idPrefix="subject"
@@ -257,7 +251,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             excludeId={spouse.personId}
             onViewPerson={viewPerson}
             onRecordBaptism={() => openSacrament('baptism')} />
-
           }
 
           <fieldset className="border-t border-line pt-6">
@@ -267,29 +260,28 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             <div className="grid gap-4 sm:grid-cols-2">
               {!isEntry &&
               <Field
-                label={isMarriage ? 'Date of marriage' : isConversion ? 'Date received & baptised' : `Date of ${config.label.toLowerCase()}`}
+                label={isMarriage ? 'Date of marriage' : `Date of ${config.label.toLowerCase()}`}
                 htmlFor="d-date"
                 required
                 error={detailErrors.date}>
-                
                 <input id="d-date" type="date" value={details.date} onChange={(e) => setDetail('date', e.target.value)} className={inputClass} />
               </Field>
               }
-              {config.extraFields.map((f) =>
+              {config.extraFields.
+              filter((f) => !isEntry || f.key === 'previousReligion').
+              map((f) =>
               <Field
                 key={f.key}
                 label={f.label}
                 htmlFor={`d-${f.key}`}
                 required={f.key === 'previousReligion'}
                 error={f.key === 'previousReligion' ? detailErrors.previousReligion : undefined}>
-                
                   <input
                   id={`d-${f.key}`}
                   value={details.extra[f.key] ?? ''}
                   placeholder={f.placeholder}
                   onChange={(e) => setDetail('extra', { ...details.extra, [f.key]: e.target.value })}
                   className={inputClass} />
-                
                 </Field>
               )}
               <Field label="Parish" htmlFor="d-parish" required error={detailErrors.parishId} hint={isEntry ? 'Also becomes their home parish.' : undefined}>
@@ -306,7 +298,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               </Field>
               }
               {!isEntry &&
-              <Field label={sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
+              <Field label={config.sponsorsLabel} htmlFor="d-sponsors" className="sm:col-span-2">
                 <input id="d-sponsors" value={details.sponsors} placeholder={config.sponsorsPlaceholder} onChange={(e) => setDetail('sponsors', e.target.value)} className={inputClass} />
               </Field>
               }
@@ -321,7 +313,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               error={spouseError}
               excludeId={personId}
               onViewPerson={viewPerson} />
-            
             </div>
           }
 
@@ -347,5 +338,4 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       </Modal>
       {peekLayer}
     </>);
-
 }

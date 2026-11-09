@@ -1,5 +1,5 @@
-
 import { AppDocument, Parish, Person, SacramentRecord } from '../types/records';
+
 export const mapParish = (p: any): Parish => ({
   id: String(p.id),
   name: p.name,
@@ -32,6 +32,19 @@ export const mapBaptism = (b: any): SacramentRecord => ({
   notes: b.notes ?? '',
   certificateNo: b.registration_number,
   extra: { place: b.parish_name ?? '' },
+});
+
+export const mapConversion = (b: any): SacramentRecord => ({
+  id: `conversion-${b.id}`,
+  type: 'conversion',
+  personId: String(b.id),
+  parishId: String(b.parish),
+  date: b.date_of_baptism ?? '',
+  minister: b.minister ?? '',
+  sponsors: b.godparent_name ?? '',
+  notes: b.notes ?? '',
+  certificateNo: b.registration_number,
+  extra: { previousReligion: b.previous_religion ?? '' },
 });
 
 export const mapCommunion = (r: any): SacramentRecord => ({
@@ -73,6 +86,7 @@ export const mapMatrimony = (r: any): SacramentRecord => ({
   certificateNo: r.registration_number ?? '',
   extra: { marriageRegNo: r.registration_number ?? '', spouseName: r.spouse_name ?? '' },
 });
+
 const CATEGORY_LABEL: Record<string, string> = {
   BAPTISM: 'Baptism',
   COMMUNION: 'First Holy Communion',
@@ -80,31 +94,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   MARRIAGE: 'Marriage',
   OTHER: 'Other',
 };
-export const mapConversion = (b: any): SacramentRecord => ({
-  id: `conversion-${b.id}`,
-  type: 'conversion',
-  personId: String(b.id),
-  parishId: String(b.parish),
-  date: b.date_of_baptism ?? '',
-  minister: b.minister ?? '',
-  sponsors: b.godparent_name ?? '',
-  notes: b.notes ?? '',
-  certificateNo: b.registration_number,
-  extra: { previousReligion: b.previous_religion ?? '' },
-});
 
-export const mapConversion = (b: any): SacramentRecord => ({
-  id: `conversion-${b.id}`,
-  type: 'conversion',
-  personId: String(b.id),
-  parishId: String(b.parish),
-  date: b.date_of_baptism ?? '',
-  minister: b.minister ?? '',
-  sponsors: b.godparent_name ?? '',
-  notes: b.notes ?? '',
-  certificateNo: b.registration_number,
-  extra: { previousReligion: b.previous_religion ?? '' },
-});
 export const categoryCode = (label: string) =>
   Object.keys(CATEGORY_LABEL).find((k) => CATEGORY_LABEL[k] === label) ?? 'OTHER';
 
