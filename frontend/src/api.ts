@@ -33,3 +33,19 @@ export const postBaptism = (b: unknown) => post("/baptisms/", b);
 export const postCommunion = (b: unknown) => post("/communions/", b);
 export const postConfirmation = (b: unknown) => post("/confirmations/", b);
 export const postMatrimony = (b: unknown) => post("/matrimonies/", b);
+export const fetchDocuments = () => list("/documents/");
+
+export async function uploadDocument(file: File, category: string, baptismId?: number) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("category", category);
+  if (baptismId) form.append("baptism", String(baptismId));
+  const res = await fetch(`${BASE}/documents/`, { method: "POST", body: form });
+  if (!res.ok) throw new Error(`Upload failed (${res.status}) ${await res.text()}`);
+  return res.json();
+}
+
+export async function deleteDocument(id: string) {
+  const res = await fetch(`${BASE}/documents/${id}/`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+}

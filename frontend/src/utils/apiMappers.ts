@@ -1,5 +1,5 @@
 import { Parish, Person, SacramentRecord } from '../types/records';
-
+import { AppDocument, Parish, Person, SacramentRecord } from '../types/records';
 export const mapParish = (p: any): Parish => ({
   id: String(p.id),
   name: p.name,
@@ -72,4 +72,26 @@ export const mapMatrimony = (r: any): SacramentRecord => ({
   notes: r.notes ?? '',
   certificateNo: r.registration_number ?? '',
   extra: { marriageRegNo: r.registration_number ?? '', spouseName: r.spouse_name ?? '' },
+});
+const CATEGORY_LABEL: Record<string, string> = {
+  BAPTISM: 'Baptism',
+  COMMUNION: 'First Holy Communion',
+  CONFIRMATION: 'Confirmation',
+  MARRIAGE: 'Marriage',
+  OTHER: 'Other',
+};
+
+export const categoryCode = (label: string) =>
+  Object.keys(CATEGORY_LABEL).find((k) => CATEGORY_LABEL[k] === label) ?? 'OTHER';
+
+export const mapDocument = (d: any, people: Person[]): AppDocument => ({
+  id: String(d.id),
+  name: d.original_name,
+  size: d.size ?? 0,
+  mimeType: '',
+  category: CATEGORY_LABEL[d.category] ?? 'Other',
+  personId: d.baptism ? String(d.baptism) : undefined,
+  parishId: people.find((p) => p.id === String(d.baptism))?.parishId ?? '',
+  uploadedOn: (d.uploaded_at ?? '').slice(0, 10),
+  url: d.file,
 });
