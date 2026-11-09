@@ -21,13 +21,14 @@ type Stage = 'choose' | 'reading' | 'review' | 'importing' | 'done';
 
 export function ImportModal({ type, onClose }: ImportModalProps) {
   const config = getSacrament(type);
-  const { people, recordsFor, addPerson, addRecord } = useRecords();
+  const { people, recordsFor, importRows } = useRecords();
   const { selectedParishId } = useUI();
   const [stage, setStage] = useState<Stage>('choose');
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState<string>();
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [importedCount, setImportedCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
 
   const ready = rows.filter((r) => r.ok);
   const problems = rows.filter((r) => !r.ok);
@@ -64,18 +65,13 @@ export function ImportModal({ type, onClose }: ImportModalProps) {
     }
   };
 
-  const runImport = () => {
+  const runImport = async () => {
     setStage('importing');
-    window.setTimeout(() => {
-      ready.forEach((row) => {
-        const payload = row.payload;
-        if (!payload) return;
-        const personId = payload.person ? addPerson(payload.person).id : payload.personId as string;
-        payload.records.forEach((record) => addRecord({ ...record, personId }));
-      });
-      setImportedCount(ready.length);
-      setStage('done');
-    }, 400);
+    const items = ready.map((r) => r.payload).filter(Boolean) as NonNullable<ImportRow['payload']>[];
+    const result = await importRows(items);
+    setImportedCount(result.saved);
+    setFailedCount(result.failed.length);
+    setStage('done');
   };
 
   const icon =
@@ -126,7 +122,7 @@ export function ImportModal({ type, onClose }: ImportModalProps) {
               </button>
             </div>
             <ul className="flex flex-wrap gap-1.5">
-              {importColumns[type].map((c) =>
+              {(importColumns[type] ?? []).map((c) =>
             <li key={c.key} className={`rounded-md px-2 py-1 text-xs ${c.required ? 'bg-sage font-medium text-sage-ink' : 'bg-cream text-muted'}`}>
                   {c.header}
                   {c.required && ' *'}
@@ -184,7 +180,7 @@ export function ImportModal({ type, onClose }: ImportModalProps) {
           </p>
           <p className="text-sm text-muted">
             {config.plural} were saved in the order they appear in {fileName}.
-            {problems.length > 0 && ` ${problems.length} rows were skipped.`}
+            {(problems.length + failedCount) > 0 && ` ${problems.length + failedCount} rows were skipped.`}
           </p>
         </div>
       }

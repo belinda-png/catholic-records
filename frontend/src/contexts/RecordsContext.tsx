@@ -10,7 +10,7 @@ import {
 import { generateRegNo, makeId } from '../utils/people';
 import { getSacrament } from '../utils/sacraments';
 import { setParishStore } from '../utils/parishStore';
-
+importRows: (items: { draft?: PersonDraft; personId?: string; records: NewRecord[] }[]) => Promise<{ saved: number; failed: string[] }>;
 interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
@@ -168,6 +168,47 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     (id: string) => setDocuments((prev) => prev.filter((d) => d.id !== id)),
     []
   );
+  const importRows = useCallback(async (items: { draft?: PersonDraft; personId?: string; records: NewRecord[] }[]) => {
+  let saved = 0;
+  const failed: string[] = [];
+  for (const item of items) {
+    try {
+      if (item.draft) {
+        const d = item.draft;
+        await postBaptism({
+          registration_number: d.regNo.trim(),
+          parish: Number(d.parishId),
+          home_parish: Number(d.parishId),
+          christian_name: d.christianName.trim(),
+          surname: d.surname.trim(),
+          date_of_birth: d.dob || null,
+          date_of_baptism: d.dateOfBaptism,
+          father_name: d.fatherName.trim(),
+          mother_name: d.motherName.trim(),
+          godparent_name: d.godparentName.trim(),
+          residence: d.village.trim(),
+          phone_number: d.phone.trim(),
+          minister: d.minister.trim(),
+          notes: '',
+        });
+      } else {
+        for (const rec of item.records) {
+          const base = { baptism: Number(item.personId), parish: Number(rec.parishId), minister: rec.minister };
+          if (rec.type === 'communion') await postCommunion({ ...base, date_received: rec.date });
+          else if (rec.type === 'confirmation') await postConfirmation({ ...base, date_received: rec.date });
+          else if (rec.type === 'matrimony') {
+            await postMatrimony({ ...base, date_of_marriage: rec.date, spouse_name: rec.extra.spouseName ?? '' });
+          }
+        }
+      }
+      saved++;
+    } catch (e) {
+      failed.push(e instanceof Error ? e.message : 'Unknown error');
+    }
+  }
+  await load();
+  return { saved, failed };
+}, [load]);
 
   const value = useMemo(
     () => ({
