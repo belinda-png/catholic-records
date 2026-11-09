@@ -14,6 +14,18 @@ export const sacraments: SacramentConfig[] = [
   extraFields: [{ key: 'place', label: 'Church / place of baptism', placeholder: 'e.g. Holy Family Church' }]
 },
 {
+  type: 'conversion',
+  label: 'Conversion',
+  plural: 'Conversions',
+  short: 'CNV',
+  description: 'Record a person baptised elsewhere who is received into the Catholic Church and baptised here.',
+  ministerLabel: 'Receiving minister',
+  sponsorsLabel: 'Sponsor',
+  sponsorsPlaceholder: 'e.g. Paul Oketcho',
+  tone: 'sage',
+  extraFields: [{ key: 'previousReligion', label: 'Previous religion / church', placeholder: 'e.g. Anglican' }]
+},
+{
   type: 'communion',
   label: 'First Holy Communion',
   plural: 'First Holy Communion',

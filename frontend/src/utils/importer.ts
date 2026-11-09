@@ -8,7 +8,7 @@ export interface ImportRow {
   name: string;
   detail: string;
   message: string;
-  payload?: { person?: NewPerson; draft?: PersonDraft; personId?: string; records: NewRecord[] };
+  payload?: { person?: NewPerson; draft?: PersonDraft; convert?: { previousReligion: string }; personId?: string; records: NewRecord[] };
 }
 
 type Raw = Record<string, string>;

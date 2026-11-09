@@ -1,4 +1,4 @@
-export type SacramentType = 'baptism' | 'communion' | 'confirmation' | 'matrimony' | 'conversion';
+export type SacramentType = 'baptism' | 'conversion' | 'communion' | 'confirmation' | 'matrimony';
 export type Gender = 'Male' | 'Female';
 export type AppView = 'dashboard' | 'people' | 'records';
 export type CandidateType = 'child' | 'adult'; // new
