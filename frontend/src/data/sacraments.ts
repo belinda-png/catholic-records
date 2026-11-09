@@ -31,11 +31,11 @@ export const sacraments: SacramentConfig[] = [
   plural: 'First Holy Communion',
   short: 'FHC',
   description: 'Record a first reception of the Holy Eucharist.',
-  ministerLabel: 'Celebrant',
+  ministerLabel: 'Minister',
   sponsorsLabel: 'Catechist',
-  sponsorsPlaceholder: 'e.g. Catechist Martin Owino',
+  sponsorsPlaceholder: '',
   tone: 'sage',
-  extraFields: [{ key: 'class', label: 'Catechism class', placeholder: 'e.g. 2026 Easter class' }]
+  extraFields: []
 },
 {
   type: 'confirmation',
@@ -43,11 +43,11 @@ export const sacraments: SacramentConfig[] = [
   plural: 'Confirmations',
   short: 'CNF',
   description: 'Record the sacrament of confirmation.',
-  ministerLabel: 'Confirming bishop',
+  ministerLabel: 'Minister',
   sponsorsLabel: 'Sponsor',
-  sponsorsPlaceholder: 'e.g. Margaret Akumu',
+  sponsorsPlaceholder: '',
   tone: 'sage',
-  extraFields: [{ key: 'confirmationName', label: 'Confirmation name', placeholder: 'e.g. Joseph' }]
+  extraFields: []
 },
 {
   type: 'matrimony',
@@ -57,7 +57,7 @@ export const sacraments: SacramentConfig[] = [
   description: 'Record a marriage and link both spouses.',
   ministerLabel: 'Officiating priest',
   sponsorsLabel: 'Witnesses',
-  sponsorsPlaceholder: 'e.g. Simon Opio, Lucy Nekesa',
+  sponsorsPlaceholder: '',
   tone: 'gold',
   extraFields: [{ key: 'marriageRegNo', label: 'Reg No', placeholder: 'e.g. 0019' }]
 }];
