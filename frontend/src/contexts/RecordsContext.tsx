@@ -1,21 +1,25 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AppDocument, NewPerson, NewRecord, Parish, Person, PersonDraft, SacramentRecord } from '../types/records'; // changed: AppDocument added
+import { AppDocument, NewPerson, NewRecord, Parish, Person, PersonDraft, SacramentRecord } from '../types/records';
 import {
-  fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes,
+  fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes, fetchDocuments,
   postBaptism, postCommunion, postConfirmation, postMatrimony,
+  uploadDocument, deleteDocument,
 } from '../api';
 import {
   mapBaptism, mapCommunion, mapConfirmation, mapMatrimony, mapParish, mapPerson,
+  mapDocument, categoryCode,
 } from '../utils/apiMappers';
 import { generateRegNo, makeId } from '../utils/people';
 import { getSacrament } from '../utils/sacraments';
 import { setParishStore } from '../utils/parishStore';
-importRows: (items: { draft?: PersonDraft; personId?: string; records: NewRecord[] }[]) => Promise<{ saved: number; failed: string[] }>;
+
+type ImportItem = { draft?: PersonDraft; personId?: string; records: NewRecord[] };
+
 interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
   records: SacramentRecord[];
-  documents: AppDocument[]; // new
+  documents: AppDocument[];
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
@@ -23,29 +27,47 @@ interface RecordsContextValue {
   recordsFor: (personId: string) => SacramentRecord[];
   createBaptism: (draft: PersonDraft, notes?: string) => Promise<{ person: Person; record: SacramentRecord }>;
   createSacrament: (rec: NewRecord) => Promise<SacramentRecord>;
-  // Still in-memory only (used by ImportModal)
+  importRows: (items: ImportItem[]) => Promise<{ saved: number; failed: string[] }>;
+  // In-memory only (kept for any old callers)
   addPerson: (input: NewPerson) => Person;
   addRecord: (input: NewRecord) => SacramentRecord;
-  // Still in-memory only (used by DocumentsModal)
-  addDocument: (d: Omit<AppDocument, 'id'>) => void; // new
-  removeDocument: (id: string) => void; // new
+  // Saved in Django
+  addDocument: (d: { file: File; category: string; personId?: string }) => Promise<void>;
+  removeDocument: (id: string) => Promise<void>;
 }
 
 const RecordsContext = createContext<RecordsContextValue | null>(null);
+
+const baptismBody = (d: PersonDraft, notes = '') => ({
+  registration_number: d.regNo.trim(),
+  parish: Number(d.parishId),
+  home_parish: Number(d.parishId),
+  christian_name: d.christianName.trim(),
+  surname: d.surname.trim(),
+  date_of_birth: d.dob || null,
+  date_of_baptism: d.dateOfBaptism,
+  father_name: d.fatherName.trim(),
+  mother_name: d.motherName.trim(),
+  godparent_name: d.godparentName.trim(),
+  residence: d.village.trim(),
+  phone_number: d.phone.trim(),
+  minister: d.minister.trim(),
+  notes,
+});
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [records, setRecords] = useState<SacramentRecord[]>([]);
-  const [documents, setDocuments] = useState<AppDocument[]>([]); // new
+  const [documents, setDocuments] = useState<AppDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const peopleRef = useRef<Person[]>([]);
   const recordsRef = useRef<SacramentRecord[]>([]);
 
   const load = useCallback(async () => {
-    const [pa, ba, co, cf, ma] = await Promise.all([
-      fetchParishes(), fetchBaptisms(), fetchCommunions(), fetchConfirmations(), fetchMatrimonies(),
+    const [pa, ba, co, cf, ma, dc] = await Promise.all([
+      fetchParishes(), fetchBaptisms(), fetchCommunions(), fetchConfirmations(), fetchMatrimonies(), fetchDocuments(),
     ]);
     const loadedParishes = pa.map(mapParish);
     const loadedPeople = ba.map(mapPerson);
@@ -59,6 +81,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     setParishes(loadedParishes);
     setPeople(loadedPeople);
     setRecords(loadedRecords);
+    setDocuments(dc.map((d) => mapDocument(d, loadedPeople)));
   }, []);
 
   const reload = useCallback(async () => {
@@ -84,22 +107,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   );
 
   const createBaptism = useCallback(async (d: PersonDraft, notes = '') => {
-    const created = await postBaptism({
-      registration_number: d.regNo.trim(),
-      parish: Number(d.parishId),
-      home_parish: Number(d.parishId),
-      christian_name: d.christianName.trim(),
-      surname: d.surname.trim(),
-      date_of_birth: d.dob || null,
-      date_of_baptism: d.dateOfBaptism,
-      father_name: d.fatherName.trim(),
-      mother_name: d.motherName.trim(),
-      godparent_name: d.godparentName.trim(),
-      residence: d.village.trim(),
-      phone_number: d.phone.trim(),
-      minister: d.minister.trim(),
-      notes,
-    });
+    const created = await postBaptism(baptismBody(d, notes));
     await load();
     return { person: mapPerson(created), record: mapBaptism(created) };
   }, [load]);
@@ -137,7 +145,32 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     return mapped;
   }, [load]);
 
-  // In-memory only (ImportModal). Not saved to Django yet.
+  const importRows = useCallback(async (items: ImportItem[]) => {
+    let saved = 0;
+    const failed: string[] = [];
+    for (const item of items) {
+      try {
+        if (item.draft) {
+          await postBaptism(baptismBody(item.draft));
+        } else {
+          for (const rec of item.records) {
+            const base = { baptism: Number(item.personId), parish: Number(rec.parishId), minister: rec.minister };
+            if (rec.type === 'communion') await postCommunion({ ...base, date_received: rec.date });
+            else if (rec.type === 'confirmation') await postConfirmation({ ...base, date_received: rec.date });
+            else if (rec.type === 'matrimony') {
+              await postMatrimony({ ...base, date_of_marriage: rec.date, spouse_name: rec.extra.spouseName ?? '' });
+            }
+          }
+        }
+        saved++;
+      } catch (e) {
+        failed.push(e instanceof Error ? e.message : 'Unknown error');
+      }
+    }
+    await load();
+    return { saved, failed };
+  }, [load]);
+
   const addPerson = useCallback((input: NewPerson) => {
     const person: Person = { ...input, id: makeId('p'), regNo: generateRegNo(peopleRef.current) };
     peopleRef.current = [person, ...peopleRef.current];
@@ -159,65 +192,24 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     return record;
   }, []);
 
-  // new: in-memory only (DocumentsModal). Lost on refresh.
-  const addDocument = useCallback(
-    (d: Omit<AppDocument, 'id'>) => setDocuments((prev) => [{ ...d, id: makeId('d') }, ...prev]),
-    []
-  );
-  const removeDocument = useCallback(
-    (id: string) => setDocuments((prev) => prev.filter((d) => d.id !== id)),
-    []
-  );
-  const importRows = useCallback(async (items: { draft?: PersonDraft; personId?: string; records: NewRecord[] }[]) => {
-  let saved = 0;
-  const failed: string[] = [];
-  for (const item of items) {
-    try {
-      if (item.draft) {
-        const d = item.draft;
-        await postBaptism({
-          registration_number: d.regNo.trim(),
-          parish: Number(d.parishId),
-          home_parish: Number(d.parishId),
-          christian_name: d.christianName.trim(),
-          surname: d.surname.trim(),
-          date_of_birth: d.dob || null,
-          date_of_baptism: d.dateOfBaptism,
-          father_name: d.fatherName.trim(),
-          mother_name: d.motherName.trim(),
-          godparent_name: d.godparentName.trim(),
-          residence: d.village.trim(),
-          phone_number: d.phone.trim(),
-          minister: d.minister.trim(),
-          notes: '',
-        });
-      } else {
-        for (const rec of item.records) {
-          const base = { baptism: Number(item.personId), parish: Number(rec.parishId), minister: rec.minister };
-          if (rec.type === 'communion') await postCommunion({ ...base, date_received: rec.date });
-          else if (rec.type === 'confirmation') await postConfirmation({ ...base, date_received: rec.date });
-          else if (rec.type === 'matrimony') {
-            await postMatrimony({ ...base, date_of_marriage: rec.date, spouse_name: rec.extra.spouseName ?? '' });
-          }
-        }
-      }
-      saved++;
-    } catch (e) {
-      failed.push(e instanceof Error ? e.message : 'Unknown error');
-    }
-  }
-  await load();
-  return { saved, failed };
-}, [load]);
+  const addDocument = useCallback(async (d: { file: File; category: string; personId?: string }) => {
+    await uploadDocument(d.file, categoryCode(d.category), d.personId ? Number(d.personId) : undefined);
+    await load();
+  }, [load]);
+
+  const removeDocument = useCallback(async (id: string) => {
+    await deleteDocument(id);
+    await load();
+  }, [load]);
 
   const value = useMemo(
     () => ({
       parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
-      createBaptism, createSacrament, addPerson, addRecord, addDocument, removeDocument,
+      createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
     }),
     [
       parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
-      createBaptism, createSacrament, addPerson, addRecord, addDocument, removeDocument,
+      createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
     ]
   );
 
