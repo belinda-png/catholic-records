@@ -13,7 +13,7 @@ import { generateRegNo, makeId } from '../utils/people';
 import { getSacrament } from '../utils/sacraments';
 import { setParishStore } from '../utils/parishStore';
 
-type ImportItem = { draft?: PersonDraft; personId?: string; records: NewRecord[] };
+type ImportItem = { draft?: PersonDraft; convert?: Convert; personId?: string; records: NewRecord[] };
 type Convert = { previousReligion: string };
 
 interface RecordsContextValue {
@@ -158,7 +158,7 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     for (const item of items) {
       try {
         if (item.draft) {
-          await postBaptism(baptismBody(item.draft));
+          await postBaptism(baptismBody(item.draft, '', item.convert));
         } else {
           for (const rec of item.records) {
             const base = { baptism: Number(item.personId), parish: Number(rec.parishId), minister: rec.minister };

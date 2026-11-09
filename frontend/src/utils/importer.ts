@@ -2,6 +2,7 @@ import { NewPerson, NewRecord, Person, PersonDraft, SacramentRecord, SacramentTy
 import { importColumns } from '../data/importColumns';
 import { checkEligibility, isEntryType } from './sacraments';
 import { getParishStore } from './parishStore';
+
 export interface ImportRow {
   line: number;       // row number in the spreadsheet (header is row 1)
   ok: boolean;
@@ -56,7 +57,7 @@ export async function readSpreadsheet(file: File): Promise<Raw[]> {
 
 export async function downloadTemplate(type: SacramentType) {
   const XLSX = await import('xlsx');
-  const headers = importColumns[type].map((c) => c.header);
+  const headers = (importColumns[type] ?? []).map((c) => c.header);
   const ws = XLSX.utils.aoa_to_sheet([headers]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Records');
@@ -102,27 +103,14 @@ export function planImport(type: SacramentType, raw: Raw[], ctx: PlanContext): I
       return {
         line, ok: true, name, detail: `Reg. ${regNo}`, message: `Baptised ${date}`,
         payload: {
-          person: {
-            fullName: name,
-            dob: toISO(row.dateofbirth),
-            fatherName: row.father ?? '',
-            motherName: row.mother ?? '',
-            godparentName: row.godparent ?? '',
-            parishId,
-            village: row.residence ?? '',
-            phone: row.phone ?? '',
-            registeredOn: date,
-          },
           draft: {
             regNo, parishId, dateOfBaptism: date, christianName: christian, surname,
             dob: toISO(row.dateofbirth), fatherName: row.father ?? '', motherName: row.mother ?? '',
             godparentName: row.godparent ?? '', village: row.residence ?? '',
             minister: row.minister ?? '', phone: row.phone ?? '',
           },
-          records: [{
-            type: 'baptism', personId: '', parishId, date,
-            minister: row.minister ?? '', sponsors: row.godparent ?? '', notes: '', extra: {},
-          }],
+          convert: type === 'conversion' ? { previousReligion: row.previousreligion ?? '' } : undefined,
+          records: [],
         },
       };
     }
