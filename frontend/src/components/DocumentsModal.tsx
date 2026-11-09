@@ -4,9 +4,8 @@ import { AlertCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, FolderOpenIcon, I
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
 import { documentCategories } from '../data/documentCategories';
-// import { parishes } from '../data/parishes';
 import { acceptAttr, documentExtensions, extensionOf, formatBytes, isImage } from '../utils/files';
-import { formatDate, todayISO } from '../utils/format';
+import { formatDate } from '../utils/format';
 import { shortParishName } from '../utils/sacraments';
 import { inputClass, secondaryButton } from '../utils/styles';
 import { Field } from './Field';
@@ -26,17 +25,18 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
   const [personText, setPersonText] = useState('');
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState<string>();
   const [peek, setPeek] = useState<string[]>([]);
 
   const resolvePerson = () => {
-    const reg = personText.match(/(\d{5})\s*$/)?.[1];
+    const reg = personText.match(/—\s*(\S+)\s*$/)?.[1] ?? personText.trim();
     return reg ? people.find((p) => p.regNo === reg) : undefined;
   };
 
-  const handleFiles = (files: File[]) => {
+  const handleFiles = async (files: File[]) => {
     setError(undefined);
     setNotice(undefined);
     if (!parishId) {
@@ -50,20 +50,24 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
     const accepted = files.filter((f) => documentExtensions.includes(extensionOf(f.name)));
     const rejected = files.filter((f) => !documentExtensions.includes(extensionOf(f.name)));
     const person = resolvePerson();
-    accepted.forEach((f) =>
-    addDocument({
-      name: f.name,
-      size: f.size,
-      mimeType: f.type,
-      category,
-      personId: person?.id,
-      parishId,
-      uploadedOn: todayISO(),
-      url: URL.createObjectURL(f)
-    })
-    );
-    if (accepted.length) setNotice(`${accepted.length} ${accepted.length === 1 ? 'document' : 'documents'} added to the archive.`);
-    if (rejected.length) setError(`Not added: ${rejected.map((f) => f.name).join(', ')}. Only PDF, Word and scanned images (JPG, PNG) are kept here.`);
+
+    setUploading(true);
+    try {
+      for (const f of accepted) {
+        await addDocument({ file: f, category, personId: person?.id });
+      }
+      if (accepted.length) {
+        setNotice(`${accepted.length} ${accepted.length === 1 ? 'document' : 'documents'} saved to the archive.`);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not upload the document.');
+      setUploading(false);
+      return;
+    }
+    setUploading(false);
+    if (rejected.length) {
+      setError(`Not added: ${rejected.map((f) => f.name).join(', ')}. Only PDF, Word and scanned images (JPG, PNG) are kept here.`);
+    }
   };
 
   const visible = useMemo(() => {
@@ -73,7 +77,7 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
       if (filter !== 'all' && d.category !== filter) return false;
       if (!q) return true;
       const person = d.personId ? getPerson(d.personId) : undefined;
-      return d.name.toLowerCase().includes(q) || person && (person.fullName.toLowerCase().includes(q) || person.regNo.includes(q));
+      return d.name.toLowerCase().includes(q) || (person && (person.fullName.toLowerCase().includes(q) || person.regNo.includes(q)));
     });
   }, [documents, selectedParishId, filter, search, getPerson]);
 
@@ -88,7 +92,7 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
           </span>
         }
         onClose={onClose}>
-        
+
         <div className="space-y-6">
           <section aria-labelledby="upload-title" className="space-y-4">
             <h3 id="upload-title" className="text-sm font-semibold text-forest">Add documents</h3>
@@ -117,7 +121,13 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
                 </datalist>
               </Field>
             </div>
-            <FileDropZone accept={acceptAttr(documentExtensions)} multiple title="Upload document files" hint="PDF, Word (.doc, .docx) or scans (.jpg, .png) · several at once" onFiles={handleFiles} />
+            <FileDropZone
+              accept={acceptAttr(documentExtensions)}
+              multiple
+              title={uploading ? 'Uploading…' : 'Upload document files'}
+              hint="PDF, Word (.doc, .docx) or scans (.jpg, .png) · several at once"
+              disabled={uploading}
+              onFiles={handleFiles} />
             {error &&
             <p className="flex items-start gap-2 rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber-ink" role="alert">
                 <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {error}
@@ -168,7 +178,7 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
                         <div className="min-w-0 text-sm">
                           <p className="truncate font-medium text-ink">{d.name}</p>
                           <p className="text-xs text-muted">
-                            {d.category} · {extensionOf(d.name).toUpperCase()} · {formatBytes(d.size)} · {formatDate(d.uploadedOn)} · {shortParishName(d.parishId)}
+                            {d.category} · {extensionOf(d.name).toUpperCase()} · {formatBytes(d.size)} · {formatDate(d.uploadedOn)}{d.parishId ? ` · ${shortParishName(d.parishId)}` : ''}
                           </p>
                           {person &&
                         <button type="button" onClick={() => setPeek([person.id])} className="text-xs font-semibold text-forest underline decoration-gold/60 underline-offset-2 hover:text-gold">
@@ -185,7 +195,17 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
                           <DownloadIcon className="h-3.5 w-3.5" /> Download
                         </a>
                         {confirmDelete === d.id ?
-                      <button type="button" onClick={() => removeDocument(d.id)} className="rounded-lg bg-danger px-2.5 py-1.5 text-xs font-medium text-white transition-colors duration-150 hover:bg-danger/90">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await removeDocument(d.id);
+                          } catch (e) {
+                            setError(e instanceof Error ? e.message : 'Could not delete the document.');
+                          }
+                          setConfirmDelete(undefined);
+                        }}
+                        className="rounded-lg bg-danger px-2.5 py-1.5 text-xs font-medium text-white transition-colors duration-150 hover:bg-danger/90">
                             Confirm delete
                           </button> :
 

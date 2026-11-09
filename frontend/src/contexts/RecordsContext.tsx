@@ -38,7 +38,7 @@ interface RecordsContextValue {
 
 const RecordsContext = createContext<RecordsContextValue | null>(null);
 
-const baptismBody = (d: PersonDraft, notes = '') => ({
+const baptismBody = (d: PersonDraft, notes = '', convert?: { previousReligion: string }) => ({
   registration_number: d.regNo.trim(),
   parish: Number(d.parishId),
   home_parish: Number(d.parishId),
@@ -53,6 +53,8 @@ const baptismBody = (d: PersonDraft, notes = '') => ({
   phone_number: d.phone.trim(),
   minister: d.minister.trim(),
   notes,
+  is_conversion: !!convert,
+  previous_religion: convert?.previousReligion ?? '',
 });
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
@@ -106,12 +108,16 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const createBaptism = useCallback(async (d: PersonDraft, notes = '') => {
-    const created = await postBaptism(baptismBody(d, notes));
-    await load();
-    return { person: mapPerson(created), record: mapBaptism(created) };
-  }, [load]);
-
+ const createBaptism = useCallback(async (d: PersonDraft, notes = '', convert?: { previousReligion: string }) => {
+  const created = await postBaptism(baptismBody(d, notes, convert));
+  await load();
+  return { person: mapPerson(created), record: mapBaptism(created) };
+}, [load]);
+const loadedRecords = [
+  ...ba.map(mapBaptism),
+  ...ba.filter((b) => b.is_conversion).map(mapConversion),
+  ...co.map(mapCommunion), ...cf.map(mapConfirmation), ...ma.map(mapMatrimony),
+];
   const createSacrament = useCallback(async (rec: NewRecord) => {
     let created: any;
     let mapped: SacramentRecord;

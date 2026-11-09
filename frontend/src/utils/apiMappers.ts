@@ -1,4 +1,4 @@
-import { Parish, Person, SacramentRecord } from '../types/records';
+
 import { AppDocument, Parish, Person, SacramentRecord } from '../types/records';
 export const mapParish = (p: any): Parish => ({
   id: String(p.id),
@@ -80,7 +80,31 @@ const CATEGORY_LABEL: Record<string, string> = {
   MARRIAGE: 'Marriage',
   OTHER: 'Other',
 };
+export const mapConversion = (b: any): SacramentRecord => ({
+  id: `conversion-${b.id}`,
+  type: 'conversion',
+  personId: String(b.id),
+  parishId: String(b.parish),
+  date: b.date_of_baptism ?? '',
+  minister: b.minister ?? '',
+  sponsors: b.godparent_name ?? '',
+  notes: b.notes ?? '',
+  certificateNo: b.registration_number,
+  extra: { previousReligion: b.previous_religion ?? '' },
+});
 
+export const mapConversion = (b: any): SacramentRecord => ({
+  id: `conversion-${b.id}`,
+  type: 'conversion',
+  personId: String(b.id),
+  parishId: String(b.parish),
+  date: b.date_of_baptism ?? '',
+  minister: b.minister ?? '',
+  sponsors: b.godparent_name ?? '',
+  notes: b.notes ?? '',
+  certificateNo: b.registration_number,
+  extra: { previousReligion: b.previous_religion ?? '' },
+});
 export const categoryCode = (label: string) =>
   Object.keys(CATEGORY_LABEL).find((k) => CATEGORY_LABEL[k] === label) ?? 'OTHER';
 

@@ -113,10 +113,11 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     (async () => {
       try {
         if (isEntry) {
-          const { record } = await createBaptism(
-            { ...candidate, parishId: details.parishId },
-            details.notes.trim()
-          );
+        const { record } = await createBaptism(
+          { ...candidate, parishId: details.parishId },
+          details.notes.trim(),
+          isConversion ? { previousReligion: details.extra.previousReligion ?? '' } : undefined
+        );
           setSaved({ record });
         } else {
           let extra = details.extra;
