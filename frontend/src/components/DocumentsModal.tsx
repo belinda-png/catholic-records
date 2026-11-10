@@ -105,7 +105,7 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
                 </select>
               </Field>
               <Field label="Parish" htmlFor="doc-parish" required>
-                <select id="doc-parish" value={parishId} onChange={(e) => setParishId(e.target.value)} className={inputClass}>
+               <select id="d-parish" value={details.parishId} disabled onChange={(e) => setDetail('parishId', e.target.value)} className={`${inputClass} cursor-default opacity-80`}>
                   <option value="">Select parish…</option>
                   {parishes.map((p) =>
                   <option key={p.id} value={p.id}>{p.name}</option>
