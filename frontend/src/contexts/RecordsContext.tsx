@@ -205,22 +205,11 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     return record;
   }, []);
 
-  const addDocument = useCallback(async (d: {
-  file: File;
-  category: string;
-  personId?: string;
-  parishId: string;
-}) => {
+const addDocument = useCallback(async (d: { file: File; category: string; personId?: string; parishId?: string }) => {
   if (!d.parishId) {
     throw new Error('Please select a parish before uploading a document.');
   }
-
-  await uploadDocument(
-    d.file,
-    categoryCode(d.category),
-    d.personId ? Number(d.personId) : undefined
-  );
-
+  await uploadDocument(d.file, categoryCode(d.category), d.personId ? Number(d.personId) : undefined, d.parishId);
   await load();
 }, [load]);
 
