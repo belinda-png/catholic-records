@@ -136,6 +136,8 @@ ADULT_AGE = 6  # age limit: this age and above goes in the Adults list
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": None,
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
+"DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     # WARNING: AllowAny is for testing only. These records are personal data,
     # so before going live change this to IsAuthenticated and add login.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
