@@ -19,7 +19,7 @@ export function SacramentCards({ loading }: SacramentCardsProps) {
   const { records, documents } = useRecords();
   const { selectedParishId, openSacrament, openImport, openDocuments } = useUI();
   const inParish = (parishId: string) => selectedParishId === 'all' || parishId === selectedParishId;
-  const documentCount = documents.filter((d) => inParish(d.parishId)).length;
+  const documentCount = documents.length;
 
   const count = (value: number) =>
   loading ? <span className="mt-2 block h-8 w-12 animate-pulse rounded-md bg-line" /> : <p className="mt-1 text-3xl font-semibold text-forest">{value}</p>;

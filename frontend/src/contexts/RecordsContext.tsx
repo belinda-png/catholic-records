@@ -31,7 +31,12 @@ interface RecordsContextValue {
   importRows: (items: ImportItem[]) => Promise<{ saved: number; failed: string[] }>;
   addPerson: (input: NewPerson) => Person;
   addRecord: (input: NewRecord) => SacramentRecord;
-  addDocument: (d: { file: File; category: string; personId?: string }) => Promise<void>;
+addDocument: (d: {
+  file: File;
+  category: string;
+  personId?: string;
+  parishId: string;
+}) => Promise<void>;
   removeDocument: (id: string) => Promise<void>;
 }
 
@@ -200,10 +205,24 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
     return record;
   }, []);
 
-  const addDocument = useCallback(async (d: { file: File; category: string; personId?: string }) => {
-    await uploadDocument(d.file, categoryCode(d.category), d.personId ? Number(d.personId) : undefined);
-    await load();
-  }, [load]);
+  const addDocument = useCallback(async (d: {
+  file: File;
+  category: string;
+  personId?: string;
+  parishId: string;
+}) => {
+  if (!d.parishId) {
+    throw new Error('Please select a parish before uploading a document.');
+  }
+
+  await uploadDocument(
+    d.file,
+    categoryCode(d.category),
+    d.personId ? Number(d.personId) : undefined
+  );
+
+  await load();
+}, [load]);
 
   const removeDocument = useCallback(async (id: string) => {
     await deleteDocument(id);
