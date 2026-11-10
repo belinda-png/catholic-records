@@ -23,6 +23,7 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [confirmDelete, setConfirmDelete] = useState<string>();
+  const { selectedParishId } = useUI();
 
   const handleFiles = async (files: File[]) => {
     setError(undefined);
@@ -33,7 +34,11 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
     setUploading(true);
     try {
       for (const f of accepted) {
-        await addDocument({ file: f, category });
+       await addDocument({
+        file: f,
+        category,
+        parishId: selectedParishId === 'all' ? undefined : selectedParishId,
+      });
       }
       if (accepted.length) {
         setNotice(`${accepted.length} ${accepted.length === 1 ? 'document' : 'documents'} saved.`);
