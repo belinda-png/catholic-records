@@ -25,7 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SSECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me")
 DEBUG = os.environ.get("DEBUG", "1") == "1"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"] + [
+    o for o in os.environ.get("CSRF_ORIGINS", "").split(",") if o
+]
 # Application definition
 
 INSTALLED_APPS = [
