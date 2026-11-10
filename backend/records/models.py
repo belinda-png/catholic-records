@@ -165,7 +165,7 @@ class Document(models.Model):
         (MARRIAGE, "Marriage"),
         (OTHER, "Other"),
     ]
-
+    parish = models.ForeignKey(Parish, on_delete=models.PROTECT, null=True, blank=True, related_name="documents")
     file = models.FileField(upload_to="documents/%Y/%m/")
     category = models.CharField(max_length=15, choices=CATEGORIES, default=OTHER)
     baptism = models.ForeignKey(BaptismRecord, on_delete=models.SET_NULL,
