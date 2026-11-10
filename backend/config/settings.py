@@ -118,6 +118,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 WHITENOISE_ROOT =BASE_DIR / "frontend_dist"
 WHITENOSE_INDEX_FILE =True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
