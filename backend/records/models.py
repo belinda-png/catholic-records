@@ -47,6 +47,8 @@ class BaptismRecord(models.Model):
     date_of_baptism = models.DateField()
     minister = models.CharField(max_length=200, blank=True)
     notes = models.TextField(blank=True)
+    is_conversion = models.BooleanField(default=False)
+    previous_religion = models.CharField(max_length=100, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
