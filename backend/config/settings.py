@@ -116,7 +116,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-
+WHITENOISE_ROOT =BASE_DIR / "frontend_dist"
+WHITENOSE_INDEX_FILE =True
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
