@@ -18,6 +18,9 @@ interface UIContextValue {
   openProfile: (personId: string) => void;
   backProfile: () => void;
   closeModal: () => void;
+  parishPrompt: boolean;
+  chooseParish: (id: string) => void;
+  cancelParishPrompt: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -25,10 +28,24 @@ const UIContext = createContext<UIContextValue | null>(null);
 export function UIProvider({ children }: {children: ReactNode;}) {
   const [selectedParishId, setSelectedParishId] = useState('all');
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
+  const [pending, setPending] = useState<(() => void) | null>(null);
 
-  const openSacrament = useCallback((type: SacramentType, personId?: string) => setModal({ kind: 'sacrament', type, personId }), []);
-  const openImport = useCallback((type: SacramentType) => setModal({ kind: 'import', type }), []);
-  const openDocuments = useCallback(() => setModal({ kind: 'documents' }), []);
+  // Editing needs a parish. Viewing does not.
+  const guard = useCallback(
+    (action: () => void) => {
+      if (selectedParishId === 'all') setPending(() => action);else
+      action();
+    },
+    [selectedParishId]
+  );
+
+  const openSacrament = useCallback(
+    (type: SacramentType, personId?: string) => guard(() => setModal({ kind: 'sacrament', type, personId })),
+    [guard]
+  );
+  const openImport = useCallback((type: SacramentType) => guard(() => setModal({ kind: 'import', type })), [guard]);
+  const openDocuments = useCallback(() => guard(() => setModal({ kind: 'documents' })), [guard]);
+
   const openProfile = useCallback(
     (personId: string) =>
     setModal((prev) =>
@@ -45,9 +62,21 @@ export function UIProvider({ children }: {children: ReactNode;}) {
   );
   const closeModal = useCallback(() => setModal({ kind: 'none' }), []);
 
+  const chooseParish = useCallback((id: string) => {
+    setSelectedParishId(id);
+    const action = pending;
+    setPending(null);
+    action?.();
+  }, [pending]);
+  const cancelParishPrompt = useCallback(() => setPending(null), []);
+
   const value = useMemo(
-    () => ({ selectedParishId, setSelectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal }),
-    [selectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal]
+    () => ({
+      selectedParishId, setSelectedParishId, modal, openSacrament, openImport, openDocuments,
+      openProfile, backProfile, closeModal,
+      parishPrompt: pending !== null, chooseParish, cancelParishPrompt
+    }),
+    [selectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal, pending, chooseParish, cancelParishPrompt]
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
