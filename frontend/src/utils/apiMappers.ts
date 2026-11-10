@@ -105,7 +105,7 @@ export const mapDocument = (d: any, people: Person[]): AppDocument => ({
   mimeType: '',
   category: CATEGORY_LABEL[d.category] ?? 'Other',
   personId: d.baptism ? String(d.baptism) : undefined,
-  parishId: people.find((p) => p.id === String(d.baptism))?.parishId ?? '',
+  parishId: d.parish ? String(d.parish) : '',
   uploadedOn: (d.uploaded_at ?? '').slice(0, 10),
   url: d.file,
 });
