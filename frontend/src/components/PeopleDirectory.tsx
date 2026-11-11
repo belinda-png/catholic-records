@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowRightIcon, SearchIcon, UserIcon } from 'lucide-react';
+import { ArrowRightIcon, PencilIcon, SearchIcon, UserIcon } from 'lucide-react';
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
 import { formatDate } from '../utils/format';
@@ -14,7 +14,7 @@ interface PeopleDirectoryProps {
 
 export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
   const { people, records } = useRecords();
-  const { selectedParishId, openProfile } = useUI();
+  const { selectedParishId, openProfile, openEditPerson } = useUI();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -52,7 +52,6 @@ export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter a name or registration number…"
             className="w-full rounded-xl border border-line bg-paper py-3 pl-10 pr-4 text-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-forest-500 focus:ring-2 focus:ring-forest-500/15" />
-          
         </div>
       </div>
 
@@ -89,7 +88,12 @@ export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
                     <td className="px-3 py-3.5 text-muted">{formatDate(p.dob)}</td>
                     <td className="px-3 py-3.5"><SacramentProgress records={recordsOf(p.id)} /></td>
                     <td className="px-3 py-3.5 text-right">
-                      <button type="button" onClick={() => openProfile(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>View history</button>
+                      <div className="flex justify-end gap-1.5">
+                        <button type="button" onClick={() => openEditPerson(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>
+                          <PencilIcon className="h-3.5 w-3.5" aria-hidden="true" /> Edit
+                        </button>
+                        <button type="button" onClick={() => openProfile(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>View history</button>
+                      </div>
                     </td>
                   </tr>
               )}
@@ -109,6 +113,11 @@ export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
                   </span>
                   <ArrowRightIcon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                 </button>
+                <div className="px-4 pb-3">
+                  <button type="button" onClick={() => openEditPerson(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>
+                    <PencilIcon className="h-3.5 w-3.5" aria-hidden="true" /> Edit
+                  </button>
+                </div>
               </li>
           )}
           </ul>

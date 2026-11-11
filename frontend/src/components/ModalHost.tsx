@@ -9,7 +9,7 @@ import { ImportModal } from './ImportModal';
 import { Modal } from './Modal';
 import { PersonProfileModal } from './PersonProfileModal';
 import { SacramentFormModal } from './SacramentFormModal';
-
+import { EditPersonModal } from './EditPersonModal';
 export function ModalHost() {
   const { modal, closeModal, openProfile, backProfile, openSacrament, parishPrompt, chooseParish, cancelParishPrompt } = useUI();
   const { parishes } = useRecords();
