@@ -283,14 +283,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
                   className={inputClass} />
                 </Field>
               )}
-              <Field label="Parish" htmlFor="d-parish" required error={detailErrors.parishId} hint={isEntry ? 'Also becomes their home parish.' : undefined}>
-              <select id="d-parish" value={details.parishId} disabled onChange={(e) => setDetail('parishId', e.target.value)} className={`${inputClass} cursor-default opacity-80`}>
-                  <option value="">Select parish…</option>
-                  {parishes.map((p) =>
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                  )}
-                </select>
-              </Field>
+             
               {!isEntry && !isMarriage &&
               <Field label="Minister" htmlFor="d-minister" required error={detailErrors.minister}>
                 <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
