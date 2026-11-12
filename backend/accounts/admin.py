@@ -6,7 +6,12 @@ from django.contrib import admin
 
 from .models import EmailOTP, ParishAccessCode, StaffProfile
 
-
+from .models import (
+    EmailOTP,
+    ParishAccessCode,
+    PendingRegistration,
+    StaffProfile,
+)
 @admin.register(StaffProfile)
 class StaffProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "parish", "is_active", "created_at")
