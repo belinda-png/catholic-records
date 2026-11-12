@@ -43,7 +43,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const isConversion = type === 'conversion';
   const isMarriage = type === 'matrimony';
   const isBaptism = type === 'baptism';
-  const { getPerson, createBaptism, createSacrament, recordsFor, addDocument } = useRecords();
+  const { people, getPerson, createBaptism, createSacrament, recordsFor, addDocument } = useRecords();
   const { selectedParishId, openProfile, openSacrament } = useUI();
   const defaultParish = selectedParishId === 'all' ? '' : selectedParishId;
   const emptyDetails: Details = { parishId: defaultParish, date: '', minister: '', sponsors: '', notes: '', extra: {} };
@@ -93,7 +93,10 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     setSaved(null);
     setStatus('idle');
   };
-
+  const candidateName = `${candidate.christianName} ${candidate.surname}`.trim().toLowerCase();
+  const alreadyBaptised = isEntry && candidateName.length > 2 && people.some(
+    (p) => p.fullName.toLowerCase() === candidateName && p.dob === candidate.dob
+  );
   const canSave =
   !!details.parishId && (
   isEntry ?
@@ -113,6 +116,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     const cErr: PersonDraftErrors = {};
     let pErr: string | undefined;
     if (isEntry) {
+      if (alreadyBaptised) cErr.surname = 'This person is already baptised in the system. A person is baptised only once.';
       if (!candidate.regNo.trim()) cErr.regNo = 'Enter the registration number';
       if (!candidate.dateOfBaptism) cErr.dateOfBaptism = 'Enter the date of baptism';
       if (!candidate.christianName.trim()) cErr.christianName = 'Enter the Christian name';
@@ -125,9 +129,10 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       if (!candidate.minister.trim()) cErr.minister = 'Enter the minister';
     } else if (!personId) {
       pErr = 'Select a baptised person from the register';
-    } else if (getPerson(personId)?.parishId !== details.parishId) {
-      pErr = 'This person was baptised in another parish. Only that parish can record sacraments for them.';
-    }
+    } else {
+  const el = checkEligibility(type, recordsFor(personId));
+  if (!el.ok) pErr = el.reason;
+}
     const sErr = isMarriage && !spouse.fullName.trim() ? "Enter the spouse's name" : undefined;
     const dErr: DetailErrors = {};
     if (!isEntry && !details.date) dErr.date = 'Enter the date';
