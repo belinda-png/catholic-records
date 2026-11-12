@@ -69,3 +69,18 @@ class EmailOTP(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.purpose}"
+
+class PendingRegistration(models.Model):
+    full_name = models.CharField(max_length=200)
+    email = models.EmailField(unique=True)
+
+    parish = models.ForeignKey(
+        Parish,
+        on_delete=models.PROTECT,
+        related_name="pending_registrations",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.email}"
