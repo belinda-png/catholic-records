@@ -1,6 +1,3 @@
-from django.db import models
-
-# Create your models here.
 
 from django.conf import settings
 from django.db import models
@@ -15,13 +12,11 @@ class StaffProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="staff_profile",
     )
-
     parish = models.ForeignKey(
         Parish,
         on_delete=models.PROTECT,
         related_name="staff_members",
     )
-
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -35,7 +30,6 @@ class ParishAccessCode(models.Model):
         on_delete=models.CASCADE,
         related_name="access_code",
     )
-
     code_hash = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -51,14 +45,8 @@ class EmailOTP(models.Model):
     ]
 
     email = models.EmailField(db_index=True)
-
     code_hash = models.CharField(max_length=128)
-
-    purpose = models.CharField(
-        max_length=20,
-        choices=PURPOSE_CHOICES,
-    )
-
+    purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
     expires_at = models.DateTimeField()
     attempts = models.PositiveSmallIntegerField(default=0)
     is_used = models.BooleanField(default=False)
@@ -70,16 +58,15 @@ class EmailOTP(models.Model):
     def __str__(self):
         return f"{self.email} - {self.purpose}"
 
+
 class PendingRegistration(models.Model):
     full_name = models.CharField(max_length=200)
     email = models.EmailField(unique=True)
-
     parish = models.ForeignKey(
         Parish,
         on_delete=models.PROTECT,
         related_name="pending_registrations",
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
