@@ -73,7 +73,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
 
   const reset = () => {
     setCandidate(emptyDraft(defaultParish));
-    setCandidateType(isConversion ? 'adult' : 'child');
+    setCandidateType(isConversion ? 'adult' : undefined);
     setPersonId(undefined);
     setSpouse(emptySpouse);
     setDetails(emptyDetails);

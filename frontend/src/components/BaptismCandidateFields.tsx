@@ -80,9 +80,7 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
           </p>
         }
 
-        <Field label="Phone" htmlFor="bap-phone">
-          <input id="bap-phone" type="tel" value={draft.phone} placeholder="+256…" onChange={(e) => update('phone', e.target.value)} className={inputClass} />
-        </Field>
+        
         <Field label="Reg. No. (INF/AD)" htmlFor="bap-reg" required error={errors.regNo}>
           <input id="bap-reg" autoComplete="off" value={draft.regNo} onChange={(e) => update('regNo', e.target.value)} className={inputClass} />
         </Field>
@@ -95,6 +93,7 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
         <Field label="Surname" htmlFor="bap-surname" required error={errors.surname}>
           <input id="bap-surname" autoComplete="off" value={draft.surname} onChange={(e) => update('surname', e.target.value)} className={inputClass} />
         </Field>
+        
 
         {possibleDuplicates.length > 0 &&
         <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber-ink" role="status">
@@ -123,20 +122,23 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
           hint={ageMismatch ? <span className="text-amber-ink">They are {age}. This is usually recorded as {isChild ? 'an adult' : 'a child'} baptism.</span> : undefined}>
           <input id="bap-dob" type="date" value={draft.dob} onChange={(e) => update('dob', e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Father" htmlFor="bap-father">
+        <Field label="Father" htmlFor="bap-father" required error={errors.fatherName}>
           <input id="bap-father" value={draft.fatherName} onChange={(e) => update('fatherName', e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Mother" htmlFor="bap-mother">
+        <Field label="Mother" htmlFor="bap-mother" required error={errors.motherName}>
           <input id="bap-mother" value={draft.motherName} onChange={(e) => update('motherName', e.target.value)} className={inputClass} />
         </Field>
-        <Field label="God Parent" htmlFor="bap-godparent">
+        <Field label="God Parent" htmlFor="bap-godparent" required error={errors.godparentName}>
           <input id="bap-godparent" value={draft.godparentName} onChange={(e) => update('godparentName', e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Residence" htmlFor="bap-village">
+        <Field label="Residence" htmlFor="bap-village" required error={errors.village}>
           <input id="bap-village" value={draft.village} onChange={(e) => update('village', e.target.value)} className={inputClass} />
         </Field>
-        <Field label="Minister" htmlFor="bap-minister">
+        <Field label="Minister" htmlFor="bap-minister" required error={errors.minister}>
           <input id="bap-minister" value={draft.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => update('minister', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Phone (optional)" htmlFor="bap-phone">
+          <input id="bap-phone" type="tel" value={draft.phone} placeholder="+256…" onChange={(e) => update('phone', e.target.value)} className={inputClass} />
         </Field>
       </div>
     </fieldset>);
