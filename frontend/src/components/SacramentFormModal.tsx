@@ -1,23 +1,23 @@
 import React, { FormEvent, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { AlertTriangleIcon, CheckIcon, Loader2Icon } from 'lucide-react';
+import { AlertTriangleIcon, CheckIcon, FileTextIcon, Loader2Icon, XIcon } from 'lucide-react';
 import { useRecords } from '../contexts/RecordsContext';
 import { useUI } from '../contexts/UIContext';
 import { CandidateType, PersonDraft, PersonDraftErrors, SacramentRecord, SacramentType, SpouseDraft } from '../types/records';
+import { acceptAttr, documentExtensions, extensionOf, formatBytes } from '../utils/files';
 import { formatDate } from '../utils/format';
 import { emptyDraft } from '../utils/people';
+import { checkEligibility, getSacrament, isEntryType, parishName, toneClass } from '../utils/sacraments';
 import { inputClass, primaryButton, secondaryButton } from '../utils/styles';
 import { BaptisedPersonPicker } from './BaptisedPersonPicker';
 import { BaptismCandidateFields } from './BaptismCandidateFields';
 import { Field } from './Field';
+import { FileDropZone } from './FileDropZone';
 import { Modal } from './Modal';
 import { PersonProfileModal } from './PersonProfileModal';
 import { SacramentIcon } from './SacramentIcon';
 import { emptySpouse, SpouseLookup } from './SpouseLookup';
-import { checkEligibility, getSacrament, isEntryType, parishName, toneClass } from '../utils/sacraments';
-import { FileTextIcon, XIcon } from 'lucide-react';
-import { acceptAttr, documentExtensions, extensionOf, formatBytes } from '../utils/files';
-import { FileDropZone } from './FileDropZone';
+
 interface SacramentFormModalProps {
   type: SacramentType;
   initialPersonId?: string;
@@ -43,7 +43,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const isConversion = type === 'conversion';
   const isMarriage = type === 'matrimony';
   const isBaptism = type === 'baptism';
-  const { getPerson, createBaptism, createSacrament, recordsFor } = useRecords();
+  const { getPerson, createBaptism, createSacrament, recordsFor, addDocument } = useRecords();
   const { selectedParishId, openProfile, openSacrament } = useUI();
   const defaultParish = selectedParishId === 'all' ? '' : selectedParishId;
   const emptyDetails: Details = { parishId: defaultParish, date: '', minister: '', sponsors: '', notes: '', extra: {} };
@@ -55,6 +55,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   );
   const [spouse, setSpouse] = useState<SpouseDraft>(emptySpouse);
   const [details, setDetails] = useState<Details>(emptyDetails);
+  const [certFiles, setCertFiles] = useState<File[]>([]);
   const [candidateErrors, setCandidateErrors] = useState<PersonDraftErrors>({});
   const [personError, setPersonError] = useState<string>();
   const [spouseError, setSpouseError] = useState<string>();
@@ -83,6 +84,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     setPersonId(undefined);
     setSpouse(emptySpouse);
     setDetails(emptyDetails);
+    setCertFiles([]);
     setCandidateErrors({});
     setPersonError(undefined);
     setSpouseError(undefined);
@@ -92,7 +94,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
     setStatus('idle');
   };
 
-  // The Save button stays grey until every required field is filled.
   const canSave =
   !!details.parishId && (
   isEntry ?
@@ -171,6 +172,11 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             notes: details.notes.trim(),
             extra
           });
+          if (isMarriage && certFiles.length) {
+            for (const f of certFiles) {
+              await addDocument({ file: f, category: 'Marriage', personId: personId as string, parishId: details.parishId });
+            }
+          }
           setSaved(record);
         }
         setStatus('saved');
@@ -215,7 +221,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             <button type="button" onClick={onClose} className={primaryButton}>Done</button>
           </>
         }>
-
         <div className="flex flex-col items-center py-4 text-center">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-sage text-sage-ink">
             <CheckIcon className="h-7 w-7" />
@@ -236,7 +241,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       </Modal>);
   }
 
-  const showForm = !isBaptism || !!candidateType;
+  const showNotes = !isBaptism || !!candidateType;
 
   return (
     <>
@@ -287,11 +292,23 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
 
           {isConversion &&
           <fieldset className="border-t border-line pt-6">
-              <legend className="mb-3 text-sm font-semibold text-forest">
-                {isMarriage ? 'Marriage' : isConversion ? 'Reception & baptism' : `${config.label} details`}
-              </legend>
-              <div className="grid gap-4 sm:grid-cols-2">
-         {!isEntry &&
+              <legend className="mb-3 text-sm font-semibold text-forest">Reception & baptism</legend>
+              {config.extraFields.
+            filter((f) => f.key === 'previousReligion').
+            map((f) =>
+            <Field key={f.key} label={f.label} htmlFor={`d-${f.key}`} required error={detailErrors.previousReligion}>
+                    <input
+                id={`d-${f.key}`}
+                value={details.extra[f.key] ?? ''}
+                placeholder={f.placeholder}
+                onChange={(e) => setDetail('extra', { ...details.extra, [f.key]: e.target.value })}
+                className={inputClass} />
+                  </Field>
+            )}
+            </fieldset>
+          }
+
+          {!isEntry &&
           <div className="space-y-4 border-t border-line pt-6">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-forest">{config.label}</h3>
 
@@ -321,31 +338,6 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             }
             </div>
           }
-                {config.extraFields.
-              filter((f) => !isEntry || f.key === 'previousReligion').
-              map((f) =>
-              <Field
-                key={f.key}
-                label={f.label}
-                htmlFor={`d-${f.key}`}
-                required={isMarriage || f.key === 'previousReligion'}
-                error={f.key === 'previousReligion' ? detailErrors.previousReligion : undefined}>
-                      <input
-                  id={`d-${f.key}`}
-                  value={details.extra[f.key] ?? ''}
-                  placeholder={f.placeholder}
-                  onChange={(e) => setDetail('extra', { ...details.extra, [f.key]: e.target.value })}
-                  className={inputClass} />
-                    </Field>
-              )}
-                {!isEntry && !isMarriage &&
-              <Field label="Minister" htmlFor="d-minister" required error={detailErrors.minister}>
-                    <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
-                  </Field>
-              }
-              </div>
-            </fieldset>
-          }
 
           {isMarriage &&
           <div className="border-t border-line pt-6">
@@ -355,6 +347,32 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
               error={spouseError}
               excludeId={personId}
               onViewPerson={viewPerson} />
+            </div>
+          }
+
+          {isMarriage &&
+          <div className="space-y-3 border-t border-line pt-6">
+              <h3 className="text-sm font-semibold text-forest">Marriage certificate</h3>
+              <FileDropZone
+              accept={acceptAttr(documentExtensions)}
+              multiple
+              title="Upload the marriage certificate"
+              hint="PDF, Word or a scan (.jpg, .png) · saved with this person"
+              onFiles={(files) => setCertFiles((prev) => [...prev, ...files.filter((f) => documentExtensions.includes(extensionOf(f.name)))])} />
+              {certFiles.length > 0 &&
+            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+                  {certFiles.map((f, i) =>
+              <li key={`${f.name}-${i}`} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                      <FileTextIcon className="h-4 w-4 shrink-0 text-forest" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate text-ink">{f.name}</span>
+                      <span className="text-xs text-muted">{formatBytes(f.size)}</span>
+                      <button type="button" onClick={() => setCertFiles((prev) => prev.filter((_, j) => j !== i))} aria-label={`Remove ${f.name}`} className="text-muted hover:text-danger">
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </li>
+              )}
+                </ul>
+            }
             </div>
           }
 
@@ -373,7 +391,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
           <p className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-danger" role="alert">{submitError}</p>
           }
 
-          {showForm &&
+          {showNotes &&
           <Field label="Notes" htmlFor="d-notes">
               <textarea id="d-notes" rows={2} value={details.notes} onChange={(e) => setDetail('notes', e.target.value)} className={`${inputClass} resize-none`} />
             </Field>
