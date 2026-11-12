@@ -22,6 +22,8 @@ export interface Person {
   village: string;
   phone: string;
   registeredOn: string;
+  christianName?: string;
+  surname?: string;
 }
 
 export interface SacramentRecord {
