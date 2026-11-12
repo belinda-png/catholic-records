@@ -17,6 +17,7 @@ from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BASE_DIR.parent / ".env"
 
 
 # Quick-start development settings - unsuitable for production
@@ -79,11 +80,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='catholic_records'),
-        'USER': config('DB_USER', default='catholic_user'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='127.0.0.1'),
-        'PORT': config('DB_PORT', default='5432'),
+        'NAME': config('DB_NAME', default='catholic_records', environ=os.environ),
+        'USER': config('DB_USER', default='catholic_user', environ=os.environ),
+        'PASSWORD': config('DB_PASSWORD', environ=os.environ),
+        'HOST': config('DB_HOST', default='127.0.0.1', environ=os.environ),
+        'PORT': config('DB_PORT', default='5432', environ=os.environ),
     }
 }
 
