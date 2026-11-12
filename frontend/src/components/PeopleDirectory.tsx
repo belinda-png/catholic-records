@@ -15,6 +15,7 @@ interface PeopleDirectoryProps {
 export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
   const { people, records } = useRecords();
   const { selectedParishId, openProfile, openEditPerson } = useUI();
+  const canEdit = (parishId: string) => selectedParishId !== 'all' && parishId === selectedParishId;
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -89,10 +90,14 @@ export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
                     <td className="px-3 py-3.5"><SacramentProgress records={recordsOf(p.id)} /></td>
                     <td className="px-3 py-3.5 text-right">
                       <div className="flex justify-end gap-1.5">
-                        <button type="button" onClick={() => openEditPerson(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>
-                          <PencilIcon className="h-3.5 w-3.5" aria-hidden="true" /> Edit
-                        </button>
-                        <button type="button" onClick={() => openProfile(p.id)} className={`${secondaryButton} px-3 py-1.5 text-xs`}>View history</button>
+                      <button
+                        type="button"
+                        disabled={!canEdit(p.parishId)}
+                        title={canEdit(p.parishId) ? 'Edit' : 'Select this person’s parish on the dashboard to edit'}
+                        onClick={() => openEditPerson(p.id)}
+                        className={`${secondaryButton} px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40`}>
+                        <PencilIcon className="h-3.5 w-3.5" aria-hidden="true" /> Edit
+                      </button>
                       </div>
                     </td>
                   </tr>
