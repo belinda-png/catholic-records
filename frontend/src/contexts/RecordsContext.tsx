@@ -16,7 +16,11 @@ import { setParishStore } from '../utils/parishStore';
 type ImportItem = { draft?: PersonDraft; convert?: Convert; personId?: string; records: NewRecord[] };
 type Convert = { previousReligion: string };
 
-
+export type PersonEdit = {
+  regNo: string; dateOfBaptism: string; christianName: string; surname: string;
+  dob: string; fatherName: string; motherName: string; godparentName: string;
+  village: string; phone: string;
+};
 interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
