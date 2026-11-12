@@ -1,10 +1,5 @@
-from django.contrib import admin
-
-# Register your models here.
 
 from django.contrib import admin
-
-from .models import EmailOTP, ParishAccessCode, StaffProfile
 
 from .models import (
     EmailOTP,
@@ -12,6 +7,8 @@ from .models import (
     PendingRegistration,
     StaffProfile,
 )
+
+
 @admin.register(StaffProfile)
 class StaffProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "parish", "is_active", "created_at")
@@ -47,6 +44,8 @@ class EmailOTPAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
 @admin.register(PendingRegistration)
 class PendingRegistrationAdmin(admin.ModelAdmin):
     list_display = ("full_name", "email", "parish", "created_at")
