@@ -6,7 +6,6 @@ import { useUI } from '../contexts/UIContext';
 import { CandidateType, PersonDraft, PersonDraftErrors, SacramentRecord, SacramentType, SpouseDraft } from '../types/records';
 import { formatDate } from '../utils/format';
 import { emptyDraft } from '../utils/people';
-import { checkEligibility, getSacrament, isEntryType, toneClass } from '../utils/sacraments';
 import { inputClass, primaryButton, secondaryButton } from '../utils/styles';
 import { BaptisedPersonPicker } from './BaptisedPersonPicker';
 import { BaptismCandidateFields } from './BaptismCandidateFields';
@@ -15,7 +14,7 @@ import { Modal } from './Modal';
 import { PersonProfileModal } from './PersonProfileModal';
 import { SacramentIcon } from './SacramentIcon';
 import { emptySpouse, SpouseLookup } from './SpouseLookup';
-
+import { checkEligibility, getSacrament, isEntryType, parishName, toneClass } from '../utils/sacraments';
 interface SacramentFormModalProps {
   type: SacramentType;
   initialPersonId?: string;
