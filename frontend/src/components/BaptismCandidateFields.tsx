@@ -35,8 +35,8 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
         <legend className="mb-3 text-sm font-semibold text-forest">Who is being baptised?</legend>
         <div className="grid grid-cols-2 gap-3">
           {([
-            ['child', 'Child', 'Under 7 years', UserIcon],
-            ['adult', 'Adult', '7 years and above', UsersIcon]
+            ['infant', 'Infant', 'Under 4 years', UserIcon],
+            ['adult', 'Adult', '4 years and above', UsersIcon]
           ] as const).map(([value, label, hint, Icon]) =>
           <button
             key={value}
