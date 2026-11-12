@@ -92,6 +92,7 @@ export function planImport(type: SacramentType, raw: Raw[], ctx: PlanContext): I
       const surname = row.surname ?? '';
       const name = `${christian} ${surname}`.trim();
       const date = toISO(row.dateofbaptism);
+      if (parishId !== ctx.defaultParishId) return fail(name, 'You can only import for your own parish');
       if (!regNo) return fail(name, 'Reg No is missing');
       if (!christian || !surname) return fail(name, 'Christian name and surname are required');
       if (!date) return fail(name, 'Date of baptism is missing or not a valid date');
