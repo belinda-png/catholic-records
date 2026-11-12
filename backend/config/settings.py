@@ -13,19 +13,17 @@ from rest_framework.permissions import AllowAny
 from pathlib import Path
 import os
 import dj_database_url
-from decouple import config
+from decouple import Config, RepositoryEnv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
-ENV_FILE = BASE_DIR.parent / ".env"
 
+# Load .env from the main catholic-records folder
+env = Config(RepositoryEnv(BASE_DIR.parent / ".env"))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+# Security settings
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = env('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"] + [
     o for o in os.environ.get("CSRF_ORIGINS", "").split(",") if o
@@ -76,15 +74,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='catholic_records', environ=os.environ),
-        'USER': config('DB_USER', default='catholic_user', environ=os.environ),
-        'PASSWORD': config('DB_PASSWORD', environ=os.environ),
-        'HOST': config('DB_HOST', default='127.0.0.1', environ=os.environ),
-        'PORT': config('DB_PORT', default='5432', environ=os.environ),
+        'NAME': env('DB_NAME', default='catholic_records'),
+        'USER': env('DB_USER', default='catholic_user'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST', default='127.0.0.1'),
+        'PORT': env('DB_PORT', default='5432'),
     }
 }
 
