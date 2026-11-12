@@ -282,21 +282,42 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
             onRecordBaptism={() => openSacrament('baptism')} />
           }
 
-          {!isBaptism &&
+          {isConversion &&
           <fieldset className="border-t border-line pt-6">
               <legend className="mb-3 text-sm font-semibold text-forest">
                 {isMarriage ? 'Marriage' : isConversion ? 'Reception & baptism' : `${config.label} details`}
               </legend>
               <div className="grid gap-4 sm:grid-cols-2">
-                {!isEntry &&
-              <Field
-                label={isMarriage ? 'Date of marriage' : `Date of ${config.label.toLowerCase()}`}
-                htmlFor="d-date"
-                required
-                error={detailErrors.date}>
+         {!isEntry &&
+          <div className="space-y-4 border-t border-line pt-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-forest">{config.label}</h3>
+
+              {isMarriage ?
+            <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Date" htmlFor="d-date" required error={detailErrors.date}>
                     <input id="d-date" type="date" value={details.date} onChange={(e) => setDetail('date', e.target.value)} className={inputClass} />
                   </Field>
-              }
+                  <Field label="Reg. No." htmlFor="d-marriageRegNo" required>
+                    <input id="d-marriageRegNo" value={details.extra.marriageRegNo ?? ''} onChange={(e) => setDetail('extra', { ...details.extra, marriageRegNo: e.target.value })} className={inputClass} />
+                  </Field>
+                </div> :
+
+            <Field label="Date" htmlFor="d-date" required error={detailErrors.date}>
+                  <input id="d-date" type="date" value={details.date} onChange={(e) => setDetail('date', e.target.value)} className={inputClass} />
+                </Field>
+            }
+
+              <Field label="Parish" htmlFor="d-parish">
+                <input id="d-parish" value={parishName(details.parishId)} readOnly className={`${inputClass} cursor-default opacity-80`} />
+              </Field>
+
+              {!isMarriage &&
+            <Field label="Minister" htmlFor="d-minister" required error={detailErrors.minister}>
+                  <input id="d-minister" value={details.minister} placeholder="e.g. Fr. Charles Okello" onChange={(e) => setDetail('minister', e.target.value)} className={inputClass} />
+                </Field>
+            }
+            </div>
+          }
                 {config.extraFields.
               filter((f) => !isEntry || f.key === 'previousReligion').
               map((f) =>
