@@ -6,8 +6,8 @@ export type ModalState =
 {kind: 'sacrament';type: SacramentType;personId?: string;} |
 {kind: 'import';type: SacramentType;} |
 {kind: 'documents';} |
-{kind: 'profile';stack: string[];};
 {kind: 'editPerson';personId: string;} |
+{kind: 'profile';stack: string[];};
 
 interface UIContextValue {
   selectedParishId: string;
@@ -16,17 +16,16 @@ interface UIContextValue {
   openSacrament: (type: SacramentType, personId?: string) => void;
   openImport: (type: SacramentType) => void;
   openDocuments: () => void;
+  openEditPerson: (personId: string) => void;
   openProfile: (personId: string) => void;
   backProfile: () => void;
   closeModal: () => void;
   parishPrompt: boolean;
   chooseParish: (id: string) => void;
   cancelParishPrompt: () => void;
-  openEditPerson: (personId: string) => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
-
 
 export function UIProvider({ children }: {children: ReactNode;}) {
   const [selectedParishId, setSelectedParishId] = useState('all');
@@ -48,7 +47,11 @@ export function UIProvider({ children }: {children: ReactNode;}) {
   );
   const openImport = useCallback((type: SacramentType) => guard(() => setModal({ kind: 'import', type })), [guard]);
   const openDocuments = useCallback(() => guard(() => setModal({ kind: 'documents' })), [guard]);
-  const openEditPerson = useCallback((personId: string) => setModal({ kind: 'editPerson', personId }), []);
+  const openEditPerson = useCallback(
+    (personId: string) => guard(() => setModal({ kind: 'editPerson', personId })),
+    [guard]
+  );
+
   const openProfile = useCallback(
     (personId: string) =>
     setModal((prev) =>
@@ -75,11 +78,11 @@ export function UIProvider({ children }: {children: ReactNode;}) {
 
   const value = useMemo(
     () => ({
-      selectedParishId, setSelectedParishId, modal, openSacrament, openImport, openDocuments,
+      selectedParishId, setSelectedParishId, modal, openSacrament, openImport, openDocuments, openEditPerson,
       openProfile, backProfile, closeModal,
       parishPrompt: pending !== null, chooseParish, cancelParishPrompt
     }),
-    [selectedParishId, modal, openSacrament, openImport, openDocuments, openProfile, backProfile, closeModal, pending, chooseParish, cancelParishPrompt]
+    [selectedParishId, modal, openSacrament, openImport, openDocuments, openEditPerson, openProfile, backProfile, closeModal, pending, chooseParish, cancelParishPrompt]
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
