@@ -123,6 +123,7 @@ export function planImport(type: SacramentType, raw: Raw[], ctx: PlanContext): I
       (regNo && ctx.people.find((p) => p.regNo === regNo)) ||
       (name && ctx.people.find((p) => norm(p.fullName) === norm(name)));
     if (!person) return fail(name || regNo, 'No baptised person matches this Reg No or name');
+    if (person.parishId !== parishId) return fail(person.fullName, 'Baptised in another parish');
     if (!date) return fail(person.fullName, 'Date is missing or not a valid date');
     if (!parishId) return fail(person.fullName, 'No parish: add a Parish column or select a parish first');
 
