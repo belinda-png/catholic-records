@@ -19,6 +19,7 @@ export function ModalHost() {
       {modal.kind === 'sacrament' &&
       <SacramentFormModal key={`s-${modal.type}-${modal.personId ?? ''}`} type={modal.type} initialPersonId={modal.personId} onClose={closeModal} />
       }
+      {modal.kind === 'editPerson' && <EditPersonModal key={`e-${modal.personId}`} personId={modal.personId} onClose={closeModal} />}
       {modal.kind === 'import' && <ImportModal key={`i-${modal.type}`} type={modal.type} onClose={closeModal} />}
       {modal.kind === 'documents' && <DocumentsModal key="documents" onClose={closeModal} />}
       {modal.kind === 'profile' &&
