@@ -7,6 +7,7 @@ export type ModalState =
 {kind: 'import';type: SacramentType;} |
 {kind: 'documents';} |
 {kind: 'profile';stack: string[];};
+{kind: 'editPerson';personId: string;} |
 
 interface UIContextValue {
   selectedParishId: string;
@@ -21,9 +22,11 @@ interface UIContextValue {
   parishPrompt: boolean;
   chooseParish: (id: string) => void;
   cancelParishPrompt: () => void;
+  openEditPerson: (personId: string) => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
+
 
 export function UIProvider({ children }: {children: ReactNode;}) {
   const [selectedParishId, setSelectedParishId] = useState('all');
@@ -45,7 +48,7 @@ export function UIProvider({ children }: {children: ReactNode;}) {
   );
   const openImport = useCallback((type: SacramentType) => guard(() => setModal({ kind: 'import', type })), [guard]);
   const openDocuments = useCallback(() => guard(() => setModal({ kind: 'documents' })), [guard]);
-
+  const openEditPerson = useCallback((personId: string) => setModal({ kind: 'editPerson', personId }), []);
   const openProfile = useCallback(
     (personId: string) =>
     setModal((prev) =>
