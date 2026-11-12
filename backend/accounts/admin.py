@@ -47,3 +47,9 @@ class EmailOTPAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+@admin.register(PendingRegistration)
+class PendingRegistrationAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "email", "parish", "created_at")
+    search_fields = ("full_name", "email")
+    list_filter = ("parish",)
+    readonly_fields = ("created_at",)
