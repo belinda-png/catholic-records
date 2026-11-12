@@ -19,6 +19,8 @@ export const mapPerson = (b: any): Person => ({
   village: b.residence ?? '',
   phone: b.phone_number ?? '',
   registeredOn: b.date_of_baptism ?? '',
+  christianName: b.christian_name ?? '',
+  surname: b.surname ?? '',
 });
 
 export const mapBaptism = (b: any): SacramentRecord => ({
