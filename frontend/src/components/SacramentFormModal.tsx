@@ -15,6 +15,9 @@ import { PersonProfileModal } from './PersonProfileModal';
 import { SacramentIcon } from './SacramentIcon';
 import { emptySpouse, SpouseLookup } from './SpouseLookup';
 import { checkEligibility, getSacrament, isEntryType, parishName, toneClass } from '../utils/sacraments';
+import { FileTextIcon, XIcon } from 'lucide-react';
+import { acceptAttr, documentExtensions, extensionOf, formatBytes } from '../utils/files';
+import { FileDropZone } from './FileDropZone';
 interface SacramentFormModalProps {
   type: SacramentType;
   initialPersonId?: string;
