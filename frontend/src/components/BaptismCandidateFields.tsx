@@ -82,16 +82,16 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
 
         
         <Field label="Reg. No. (INF/AD)" htmlFor="bap-reg" required error={errors.regNo}>
-          <input id="bap-reg" autoComplete="off" value={draft.regNo} onChange={(e) => update('regNo', e.target.value)} className={inputClass} />
+          <input id="bap-reg" autoComplete="on" value={draft.regNo} onChange={(e) => update('regNo', e.target.value)} className={inputClass} />
         </Field>
         <Field label="Date of Baptism" htmlFor="bap-date" required error={errors.dateOfBaptism}>
           <input id="bap-date" type="date" value={draft.dateOfBaptism} onChange={(e) => update('dateOfBaptism', e.target.value)} className={inputClass} />
         </Field>
         <Field label="Christian Name" htmlFor="bap-christian" required error={errors.christianName}>
-          <input id="bap-christian" autoComplete="off" value={draft.christianName} onChange={(e) => update('christianName', e.target.value)} className={inputClass} />
+          <input id="bap-christian" autoComplete="on" value={draft.christianName} onChange={(e) => update('christianName', e.target.value)} className={inputClass} />
         </Field>
         <Field label="Surname" htmlFor="bap-surname" required error={errors.surname}>
-          <input id="bap-surname" autoComplete="off" value={draft.surname} onChange={(e) => update('surname', e.target.value)} className={inputClass} />
+          <input id="bap-surname" autoComplete="on" value={draft.surname} onChange={(e) => update('surname', e.target.value)} className={inputClass} />
         </Field>
         
 
