@@ -31,9 +31,12 @@ export function BaptisedPersonPicker({ idPrefix, heading, type, personId, onChan
 
   const matches = useMemo(() => {
     const found = searchPeople(people, query, 30).filter((p) => p.id !== excludeId).map((p) => {
-      const sameParish = p.parishId === selectedParishId;
+      // const sameParish = p.parishId === selectedParishId;
+      // const elig = checkEligibility(type, recordsFor(p.id));
+      // const reason = !sameParish ? `Registered in ${shortParishName(p.parishId)}` : !elig.ok ? elig.reason : undefined;
       const elig = checkEligibility(type, recordsFor(p.id));
-      const reason = !sameParish ? `Registered in ${shortParishName(p.parishId)}` : !elig.ok ? elig.reason : undefined;
+
+      const reason = !elig.ok ? elig.reason : undefined;
       return { p, reason };
     });
     return found.sort((a, b) => Number(!!a.reason) - Number(!!b.reason)).slice(0, 8);
