@@ -16,12 +16,14 @@ import { setParishStore } from '../utils/parishStore';
 type ImportItem = { draft?: PersonDraft; convert?: Convert; personId?: string; records: NewRecord[] };
 type Convert = { previousReligion: string };
 
+
 interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
   records: SacramentRecord[];
   documents: AppDocument[];
   loading: boolean;
+  updatePerson: (id: string, d: PersonEdit) => Promise<void>;
   error: string | null;
   reload: () => Promise<void>;
   getPerson: (id: string) => Person | undefined;
