@@ -42,9 +42,8 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
   const { selectedParishId, openProfile, openSacrament } = useUI();
   const defaultParish = selectedParishId === 'all' ? '' : selectedParishId;
   const emptyDetails: Details = { parishId: defaultParish, date: '', minister: '', sponsors: '', notes: '', extra: {} };
-
+  const [candidateType, setCandidateType] = useState<CandidateType | undefined>(isConversion ? 'adult' : undefined);
   const [candidate, setCandidate] = useState<PersonDraft>(emptyDraft(defaultParish));
-  const [candidateType, setCandidateType] = useState<CandidateType>(isConversion ? 'adult' : 'child');
   const [personId, setPersonId] = useState<string | undefined>(() =>
   !isEntry && initialPersonId && checkEligibility(type, recordsFor(initialPersonId)).ok ? initialPersonId : undefined
   );
