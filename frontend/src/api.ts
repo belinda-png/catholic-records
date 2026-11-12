@@ -72,3 +72,8 @@ export async function deleteDocument(id: string) {
     throw new Error(`Delete failed (${res.status})`);
   }
 }
+export const patchBaptism = (id: string, body: unknown) =>
+  request<any>(`/baptisms/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
