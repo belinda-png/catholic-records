@@ -223,6 +223,21 @@ const addDocument = useCallback(async (d: { file: File; category: string; person
     await deleteDocument(id);
     await load();
   }, [load]);
+  const updatePerson = useCallback(async (id: string, d: PersonEdit) => {
+    await patchBaptism(id, {
+      registration_number: d.regNo.trim(),
+      date_of_baptism: d.dateOfBaptism,
+      christian_name: d.christianName.trim(),
+      surname: d.surname.trim(),
+      date_of_birth: d.dob || null,
+      father_name: d.fatherName.trim(),
+      mother_name: d.motherName.trim(),
+      godparent_name: d.godparentName.trim(),
+      residence: d.village.trim(),
+      phone_number: d.phone.trim(),
+    });
+    await load();
+  }, [load]);
 
   const value = useMemo(
     () => ({
