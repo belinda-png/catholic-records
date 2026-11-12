@@ -43,6 +43,7 @@ export function checkEligibility(type: SacramentType, recs: SacramentRecord[]): 
     if (has('confirmation')) return { ok: false, reason: 'Already confirmed' };
     if (!has('communion')) return { ok: false, reason: 'Needs First Holy Communion first' };
   }
+  if (type === 'matrimony' && !has('confirmation')) return { ok: false, reason: 'Needs Confirmation first' };
   return { ok: true };
 }
 export const isEntryType = (type: string) => type === 'baptism' || type === 'conversion';
