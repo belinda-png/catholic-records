@@ -1,5 +1,8 @@
 import { getToken, logout } from "./auth";
 
+const BASE =
+  (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api";
+
 const authHeader = (): Record<string, string> => {
   const t = getToken();
   return t ? { Authorization: `Token ${t}` } : {};
@@ -8,29 +11,16 @@ const authHeader = (): Record<string, string> => {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
-    headers: { "Content-Type": "application/json", ...authHeader(), ...(options?.headers ?? {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(),
+      ...(options?.headers ?? {}),
+    },
   });
 
-  if (res.status === 401) { logout(); }
-
-  if (!res.ok) {
-    let detail = "";
-    try { detail = JSON.stringify(await res.json()); } catch {}
-    throw new Error(`Request to ${path} failed (${res.status}) ${detail}`);
+  if (res.status === 401) {
+    logout();
   }
-  return res.json();
-}
-const BASE =
-  (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api";
-
-async function request<T>(
-  path: string,
-  options?: RequestInit
-): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
 
   if (!res.ok) {
     let detail = "";
@@ -40,6 +30,8 @@ async function request<T>(
     throw new Error(`Request to ${path} failed (${res.status}) ${detail}`);
   }
 
+  // DELETE and some PATCH responses have no body
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -59,13 +51,18 @@ export const fetchBaptisms = () => list("/baptisms/");
 export const fetchCommunions = () => list("/communions/");
 export const fetchConfirmations = () => list("/confirmations/");
 export const fetchMatrimonies = () => list("/matrimonies/");
+export const fetchDocuments = () => list("/documents/");
 
 export const postBaptism = (b: unknown) => post("/baptisms/", b);
 export const postCommunion = (b: unknown) => post("/communions/", b);
 export const postConfirmation = (b: unknown) => post("/confirmations/", b);
 export const postMatrimony = (b: unknown) => post("/matrimonies/", b);
 
-export const fetchDocuments = () => list("/documents/");
+export const patchBaptism = (id: string, body: unknown) =>
+  request<any>(`/baptisms/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 
 export async function uploadDocument(
   file: File,
@@ -79,7 +76,13 @@ export async function uploadDocument(
   if (baptismId) form.append("baptism", String(baptismId));
   if (parishId) form.append("parish", parishId);
 
-  const res = await fetch(`${BASE}/documents/`, { method: "POST", body: form });
+  // No Content-Type here: the browser sets it for file uploads
+  const res = await fetch(`${BASE}/documents/`, {
+    method: "POST",
+    body: form,
+    headers: authHeader(),
+  });
+  if (res.status === 401) logout();
   if (!res.ok) throw new Error(`Upload failed (${res.status}) ${await res.text()}`);
   return res.json();
 }
@@ -87,14 +90,8 @@ export async function uploadDocument(
 export async function deleteDocument(id: string) {
   const res = await fetch(`${BASE}/documents/${id}/`, {
     method: "DELETE",
+    headers: authHeader(),
   });
-
-  if (!res.ok) {
-    throw new Error(`Delete failed (${res.status})`);
-  }
+  if (res.status === 401) logout();
+  if (!res.ok) throw new Error(`Delete failed (${res.status})`);
 }
-export const patchBaptism = (id: string, body: unknown) =>
-  request<any>(`/baptisms/${id}/`, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
