@@ -14,7 +14,7 @@ class ExpiringTokenAuthentication(TokenAuthentication):
     def authenticate_credentials(self, key):
         user, token = super().authenticate_credentials(key)
 
-        if timezone.now() - token.created > timedelta(days=7):
+        if timezone.now() - token.created > timedelta(minutes=1):
             token.delete()
             raise AuthenticationFailed(
                 "Your session has expired. Please log in again."
