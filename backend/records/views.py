@@ -601,25 +601,6 @@ class DocumentViewSet(
         parish = get_staff_parish(self.request.user)
         return queryset.filter(parish=parish)
 
-    def get_queryset_for_baptism(self, baptism_id):
-        if not baptism_id:
-            return None
-
-        return BaptismRecord.objects.filter(pk=baptism_id).first()
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        return context
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        if is_central_admin(self.request.user):
-            return queryset
-
-        parish = get_staff_parish(self.request.user)
-        return queryset.filter(parish=parish)
-
     def perform_create(self, serializer):
         uploaded_file = self.request.FILES.get("file")
 
@@ -638,9 +619,13 @@ class DocumentViewSet(
 
             if parish_id:
                 try:
-                    save_data["parish"] = Parish.objects.get(pk=parish_id)
+                    save_data["parish"] = Parish.objects.get(
+                        pk=parish_id
+                    )
                 except Parish.DoesNotExist:
-                    raise PermissionDenied("The selected parish was not found.")
+                    raise PermissionDenied(
+                        "The selected parish was not found."
+                    )
 
         serializer.save(**save_data)
 

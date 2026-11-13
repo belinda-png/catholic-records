@@ -44,7 +44,7 @@ class BaptismRecord(models.Model):
     home_parish = models.ForeignKey(Parish, on_delete=models.PROTECT, related_name="people",
                                     null=True, blank=True)
 
-    date_of_baptism = models.DateField()
+    # date_of_baptism = models.DateField()
     minister = models.CharField(max_length=200, blank=True)
     notes = models.TextField(blank=True)
     is_conversion = models.BooleanField(default=False)
