@@ -1,15 +1,12 @@
-from django.shortcuts import render
-
-# Create your views here.
 
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
+from django.db import transaction
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -18,10 +15,38 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from records.models import Parish
-from .models import EmailOTP, ParishAccessCode, PendingRegistration, StaffProfile
-
+from .models import (
+    EmailOTP,
+    ParishAccessCode,
+    PendingRegistration,
+    StaffProfile,
+)
 
 User = get_user_model()
+
+
+def generate_username(email):
+    """
+    Generate a valid, unique username from an email address.
+    Symbols in the email are not copied into the username.
+    """
+    local_part = email.split("@")[0]
+
+    username = "".join(
+        char for char in local_part if char.isalnum() or char in "@.+-_"
+    )
+
+    username = username[:140] or "staff"
+
+    original = username
+    counter = 1
+
+    while User.objects.filter(username=username).exists():
+        suffix = str(counter)
+        username = f"{original[:150 - len(suffix)]}{suffix}"
+        counter += 1
+
+    return username
 
 
 def send_otp(email, purpose):
@@ -64,7 +89,6 @@ def get_valid_otp(email, purpose):
 def create_login_token(user):
     token, created = Token.objects.get_or_create(user=user)
 
-    # Refresh the token's creation time whenever the user logs in.
     token.created = timezone.now()
     token.save(update_fields=["created"])
 
@@ -223,11 +247,14 @@ class CompleteRegistrationView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            username = generate_username(email)
+
             user = User.objects.create_user(
-                username=email,
+                username=username,
                 email=email,
                 first_name=pending.full_name[:150],
             )
+
             user.set_unusable_password()
             user.save()
 
@@ -348,7 +375,10 @@ class VerifyLoginOTPView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=True,
+        ).first()
 
         if not user:
             return Response(
