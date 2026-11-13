@@ -1,4 +1,25 @@
+import { getToken, logout } from "./auth";
 
+const authHeader = (): Record<string, string> => {
+  const t = getToken();
+  return t ? { Authorization: `Token ${t}` } : {};
+};
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...authHeader(), ...(options?.headers ?? {}) },
+  });
+
+  if (res.status === 401) { logout(); }
+
+  if (!res.ok) {
+    let detail = "";
+    try { detail = JSON.stringify(await res.json()); } catch {}
+    throw new Error(`Request to ${path} failed (${res.status}) ${detail}`);
+  }
+  return res.json();
+}
 const BASE =
   (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api";
 
