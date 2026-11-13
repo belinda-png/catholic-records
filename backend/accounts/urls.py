@@ -5,6 +5,7 @@ from .views import (
     CompleteRegistrationView,
     LoginOTPView,
     VerifyLoginOTPView,
+    public_parishes,
 )
 
 urlpatterns = [
@@ -12,4 +13,5 @@ urlpatterns = [
     path("register/complete/", CompleteRegistrationView.as_view(), name="complete-registration"),
     path("login/", LoginOTPView.as_view(), name="login"),
     path("login/verify/", VerifyLoginOTPView.as_view(), name="verify-login"),
+    path("parishes/", public_parishes, name="public-parishes"),
 ]
