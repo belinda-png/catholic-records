@@ -29,7 +29,10 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: {children: ReactNode;}) {
-  const [selectedParishId, setSelectedParishId] = useState('all');
+ const [selectedParishId, setSelectedParishId] = useState(() => {
+  const u = getUser();
+  return u?.parish_id ? String(u.parish_id) : 'all';
+});
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
   const [pending, setPending] = useState<(() => void) | null>(null);
 
