@@ -1,5 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { SacramentType } from '../types/records';
+import { getUser } from '../auth';
 
 export type ModalState =
 {kind: 'none';} |
