@@ -21,7 +21,14 @@ from .models import (
     PendingRegistration,
     StaffProfile,
 )
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from records.models import Parish
 
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def public_parishes(request):
+    return Response(list(Parish.objects.filter(is_active=True).values("id", "name")))
 User = get_user_model()
 
 
