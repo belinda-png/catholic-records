@@ -1,5 +1,5 @@
 import { getToken, logout } from "./auth";
-
+export const deleteBaptism = (id: string) => request<void>(`/baptisms/${id}/`, { method: "DELETE" });
 const BASE =
   (import.meta.env.VITE_API_URL || "").replace(/\/$/, "") + "/api";
 

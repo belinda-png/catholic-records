@@ -13,6 +13,8 @@ interface EditPersonModalProps {
 export function EditPersonModal({ personId, onClose }: EditPersonModalProps) {
   const { getPerson, updatePerson } = useRecords();
   const person = getPerson(personId);
+  const { canEdit } = useUI();
+  const allowed = !!person && canEdit(person.parishId);
 
   const [form, setForm] = useState<PersonEdit>(() => ({
     regNo: person?.regNo ?? '',
