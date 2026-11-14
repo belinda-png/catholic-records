@@ -26,22 +26,19 @@ export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
 
   const [query, setQuery] = useState('');
 
-  // const canEdit = (parishId: string) =>
-  //   selectedParishId !== 'all' && parishId === selectedParishId;
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
 
-  // const filtered = useMemo(() => {
-  //   const q = query.trim().toLowerCase();
-
-  //   return people.filter(
-  //     (p) =>
-  //       (selectedParishId === 'all' || p.parishId === selectedParishId) &&
-  //       (
-  //         !q ||
-  //         p.fullName.toLowerCase().includes(q) ||
-  //         p.regNo.toLowerCase().includes(q)
-  //       )
-  //   );
-  // }, [people, query, selectedParishId]);
+    return people.filter(
+      (p) =>
+        (viewParishId === 'all' || p.parishId === viewParishId) &&
+        (
+          !q ||
+          p.fullName.toLowerCase().includes(q) ||
+          p.regNo.toLowerCase().includes(q)
+        )
+    );
+  }, [people, query, viewParishId]);
 
   const visible = limit ? filtered.slice(0, limit) : filtered;
 

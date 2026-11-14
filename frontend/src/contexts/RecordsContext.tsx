@@ -3,7 +3,7 @@ import { AppDocument, NewPerson, NewRecord, Parish, Person, PersonDraft, Sacrame
 import {
   fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes, fetchDocuments,
   postBaptism, postCommunion, postConfirmation, postMatrimony,
-  uploadDocument, deleteDocument,
+  uploadDocument, deleteDocument, deleteBaptism,
 } from '../api';
 import {
   mapBaptism, mapConversion, mapCommunion, mapConfirmation, mapMatrimony, mapParish, mapPerson,
@@ -13,36 +13,42 @@ import { generateRegNo, makeId } from '../utils/people';
 import { getSacrament } from '../utils/sacraments';
 import { setParishStore } from '../utils/parishStore';
 
-type ImportItem = { draft?: PersonDraft; convert?: Convert; personId?: string; records: NewRecord[] };
 type Convert = { previousReligion: string };
+type ImportItem = { draft?: PersonDraft; convert?: Convert; personId?: string; records: NewRecord[] };
 
 export type PersonEdit = {
   regNo: string; dateOfBaptism: string; christianName: string; surname: string;
   dob: string; fatherName: string; motherName: string; godparentName: string;
   village: string; phone: string;
 };
+
 interface RecordsContextValue {
   parishes: Parish[];
   people: Person[];
   records: SacramentRecord[];
   documents: AppDocument[];
   loading: boolean;
-  updatePerson: (id: string, d: PersonEdit) => Promise<void>;
   error: string | null;
   reload: () => Promise<void>;
   getPerson: (id: string) => Person | undefined;
   recordsFor: (personId: string) => SacramentRecord[];
-  createBaptism: (draft: PersonDraft, notes?: string, convert?: Convert) => Promise<{ person: Person; record: SacramentRecord }>;
+  createBaptism: (
+    draft: PersonDraft,
+    notes?: string,
+    convert?: Convert
+  ) => Promise<{ person: Person; record: SacramentRecord }>;
   createSacrament: (rec: NewRecord) => Promise<SacramentRecord>;
   importRows: (items: ImportItem[]) => Promise<{ saved: number; failed: string[] }>;
   addPerson: (input: NewPerson) => Person;
   addRecord: (input: NewRecord) => SacramentRecord;
-addDocument: (d: {
-  file: File;
-  category: string;
-  personId?: string;
-  parishId: string;
-}) => Promise<void>;
+  updatePerson: (id: string, d: PersonEdit) => Promise<void>;
+  removePerson: (id: string) => Promise<void>;
+  addDocument: (d: {
+    file: File;
+    category: string;
+    personId?: string;
+    parishId: string;
+  }) => Promise<void>;
   removeDocument: (id: string) => Promise<void>;
 }
 
@@ -236,6 +242,10 @@ const addDocument = useCallback(async (d: { file: File; category: string; person
       residence: d.village.trim(),
       phone_number: d.phone.trim(),
     });
+    await load();
+  }, [load]);
+  const removePerson = useCallback(async (id: string) => {
+    await deleteBaptism(id);
     await load();
   }, [load]);
 
