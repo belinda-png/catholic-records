@@ -22,26 +22,26 @@ interface PeopleDirectoryProps {
 
 export function PeopleDirectory({ limit, onViewAll }: PeopleDirectoryProps) {
   const { people, records } = useRecords();
-  const { selectedParishId, openProfile, openEditPerson } = useUI();
+  const { viewParishId, canEdit, openProfile, openEditPerson } = useUI();
 
   const [query, setQuery] = useState('');
 
-  const canEdit = (parishId: string) =>
-    selectedParishId !== 'all' && parishId === selectedParishId;
+  // const canEdit = (parishId: string) =>
+  //   selectedParishId !== 'all' && parishId === selectedParishId;
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  // const filtered = useMemo(() => {
+  //   const q = query.trim().toLowerCase();
 
-    return people.filter(
-      (p) =>
-        (selectedParishId === 'all' || p.parishId === selectedParishId) &&
-        (
-          !q ||
-          p.fullName.toLowerCase().includes(q) ||
-          p.regNo.toLowerCase().includes(q)
-        )
-    );
-  }, [people, query, selectedParishId]);
+  //   return people.filter(
+  //     (p) =>
+  //       (selectedParishId === 'all' || p.parishId === selectedParishId) &&
+  //       (
+  //         !q ||
+  //         p.fullName.toLowerCase().includes(q) ||
+  //         p.regNo.toLowerCase().includes(q)
+  //       )
+  //   );
+  // }, [people, query, selectedParishId]);
 
   const visible = limit ? filtered.slice(0, limit) : filtered;
 
