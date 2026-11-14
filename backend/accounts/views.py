@@ -21,6 +21,7 @@ from .models import (
     PendingRegistration,
     StaffProfile,
 )
+from django.utils.html import escape
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from records.models import Parish
 
@@ -56,7 +57,7 @@ def generate_username(email):
     return username
 
 
-def send_otp(email, purpose):
+def send_otp(email, purpose, full_name="", parish=None, access_code=None):
     """Generate and email a six-digit OTP."""
     code = get_random_string(6, allowed_chars="0123456789")
 
@@ -70,15 +71,36 @@ def send_otp(email, purpose):
         email=email,
         code_hash=make_password(code),
         purpose=purpose,
-        expires_at=timezone.now() + timedelta(minutes=10),
+        expires_at=timezone.now() + timedelta(minutes=365),
     )
+    greeting = f"Hello {full_name},\n\n" if full_name else ""
+
+    message = (
+        f"{greeting}"
+        f"Your verification code is {code}.\n\n"
+        "It expires in 10 minutes. Do not share this code with anyone."
+    )
+
+    if parish and access_code:
+        message += f"\n\nYour parish access code for {parish.name} is: {access_code}"
+
+    html_message = (
+        f"<p>Hello {escape(full_name)},</p>" if full_name else ""
+    ) + (
+        f"<p>Your verification code: <b>{code}</b> (expires in 10 minutes)</p>"
+        "<p>Do not share this code with anyone.</p>"
+    )
+
+    if parish and access_code:
+        html_message += (
+            f"<p>Your parish access code for {escape(parish.name)}: "
+            f"<b>{escape(access_code)}</b></p>"
+        )
 
     send_mail(
         subject="Your Catholic Sacramental Records verification code",
-        message=(
-            f"Your verification code is {code}.\n\n"
-            "It expires in 10 minutes. Do not share this code with anyone."
-        ),
+        message=message,
+        html_message=html_message,
         from_email=None,
         recipient_list=[email],
         fail_silently=False,
@@ -142,7 +164,7 @@ class RegistrationOTPView(APIView):
                 {"error": "An account with this email already exists. Please log in."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+        
         try:
             parish = Parish.objects.get(id=parish_id, is_active=True)
         except (Parish.DoesNotExist, ValueError, TypeError):
