@@ -8,20 +8,26 @@ from records.models import Parish
 
 
 class Command(BaseCommand):
-    help = "Create or reset the access code of every parish (or one parish with --parish ID)."
+    help = "Create or reset the access code of every active parish (or one with --parish ID)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--parish", type=int, help="Parish id")
+        parser.add_argument("--parish", type=int, default=None, help="Parish id")
 
     def handle(self, *args, **opts):
         parishes = Parish.objects.filter(is_active=True)
-        if opts["parish"]:
+        if opts.get("parish"):
             parishes = parishes.filter(id=opts["parish"])
+
         for p in parishes:
-            code = secrets.token_hex(3).upper()  # e.g. 9F3A1C
+            code = secrets.token_hex(3).upper()
             ParishAccessCode.objects.update_or_create(
                 parish=p,
-                defaults={"code_hash": make_password(code), "code_plain": code, "is_active": True},
+                defaults={
+                    "code_hash": make_password(code),
+                    "code_plain": code,
+                    "is_active": True,
+                },
             )
             self.stdout.write(f"{p.id}  {p.name}:  {code}")
-        self.stdout.write(self.style.WARNING("Write these down now. They cannot be shown again."))
+
+        self.stdout.write(self.style.WARNING("Write these down. Each run replaces all codes."))
