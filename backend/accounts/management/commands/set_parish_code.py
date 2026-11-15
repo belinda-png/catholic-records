@@ -21,7 +21,7 @@ class Command(BaseCommand):
             code = secrets.token_hex(3).upper()  # e.g. 9F3A1C
             ParishAccessCode.objects.update_or_create(
                 parish=p,
-                defaults={"code_hash": make_password(code), "is_active": True},
+                defaults={"code_hash": make_password(code), "code_plain": code, "is_active": True},
             )
             self.stdout.write(f"{p.id}  {p.name}:  {code}")
         self.stdout.write(self.style.WARNING("Write these down now. They cannot be shown again."))

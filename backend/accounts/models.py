@@ -33,6 +33,9 @@ class ParishAccessCode(models.Model):
     code_hash = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
+    code_plain = models.CharField(max_length=20, blank=True)
+    def get_code(self):
+        return self.code_plain
 
     def __str__(self):
         return f"Access code - {self.parish.name}"
