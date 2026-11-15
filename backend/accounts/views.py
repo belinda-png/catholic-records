@@ -71,7 +71,7 @@ def send_otp(email, purpose, full_name="", parish=None, access_code=None):
         email=email,
         code_hash=make_password(code),
         purpose=purpose,
-        expires_at=timezone.now() + timedelta(minutes=365),
+        expires_at=timezone.now() + timedelta(minutes=10),
     )
     greeting = f"Hello {full_name},\n\n" if full_name else ""
 
