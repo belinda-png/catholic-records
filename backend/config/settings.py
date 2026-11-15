@@ -146,7 +146,7 @@ ADULT_AGE = 5  # age limit: this age and above goes in the Adults list
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": None,
-    # "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.ExpiringTokenAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.ExpiringTokenAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
