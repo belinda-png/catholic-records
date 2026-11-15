@@ -1,7 +1,3 @@
-
-from datetime import timedelta
-
-from django.utils import timezone
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -9,16 +5,11 @@ from .models import StaffProfile
 
 
 class ExpiringTokenAuthentication(TokenAuthentication):
+    """Token login that never expires. Kept under the old name so settings still work."""
     keyword = "Token"
 
     def authenticate_credentials(self, key):
         user, token = super().authenticate_credentials(key)
-
-        if timezone.now() - token.created > timedelta(days=365):
-            token.delete()
-            raise AuthenticationFailed(
-                "Your session has expired. Please log in again."
-            )
 
         if not user.is_superuser:
             try:
