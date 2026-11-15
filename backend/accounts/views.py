@@ -164,7 +164,7 @@ class RegistrationOTPView(APIView):
                 {"error": "An account with this email already exists. Please log in."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         try:
             parish = Parish.objects.get(id=parish_id, is_active=True)
         except (Parish.DoesNotExist, ValueError, TypeError):
@@ -173,16 +173,27 @@ class RegistrationOTPView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            parish_code = ParishAccessCode.objects.get(parish=parish, is_active=True)
+        except ParishAccessCode.DoesNotExist:
+            return Response(
+                {"error": "This parish does not currently have an active access code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         PendingRegistration.objects.update_or_create(
             email=email,
-            defaults={
-                "full_name": full_name,
-                "parish": parish,
-            },
+            defaults={"full_name": full_name, "parish": parish},
         )
 
         try:
-            send_otp(email, "REGISTER")
+            send_otp(
+                email,
+                "REGISTER",
+                full_name=full_name,
+                parish=parish,
+                access_code=parish_code.get_code(),
+            )
         except Exception:
             return Response(
                 {"error": "We could not send your email code. Please try again."},
