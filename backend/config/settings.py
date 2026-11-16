@@ -133,7 +133,7 @@ EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "").replace(" ", "")
 DEFAULT_FROM_EMAIL = f"Parish Records <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "noreply@catholicrecords.org"
-
+EMAIL_TIMEOUT = 10
 # ---------------------------------------------------------------
 # App settings
 # ---------------------------------------------------------------
