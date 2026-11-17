@@ -6,8 +6,11 @@ from pathlib import Path
 
 import dj_database_url
 from decouple import AutoConfig, Config, RepositoryEnv
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # Local development reads ../.env if it exists. On Render, real environment variables are used.
 _env_file = BASE_DIR.parent / ".env"
@@ -125,18 +128,14 @@ WHITENOISE_INDEX_FILE = True
 # ---------------------------------------------------------------
 # Email (real values come from environment variables)
 # ---------------------------------------------------------------
-# EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 465
-# EMAIL_USE_SSL = True
-# EMAIL_USE_TLS = False
-# EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "").replace(" ", "")
-# DEFAULT_FROM_EMAIL = f"Parish Records <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "noreply@catholicrecords.org"
-# EMAIL_TIMEOUT = 10
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-ANYMAIL = {"BREVO_API_KEY": os.environ.get("BREVO_API_KEY", "")}
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@catholicrecords.org")
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "parishrecords09@gmail.com")
+EMAIL_HOST_PASSWORD = os.environ.get( "EMAIL_HOST_PASSWORD","xxxxxxxxxxxxxxxx").replace(" ", "")
+DEFAULT_FROM_EMAIL = f"Parish Records <{EMAIL_HOST_USER}>"
 EMAIL_TIMEOUT = 10
 # ---------------------------------------------------------------
 # App settings

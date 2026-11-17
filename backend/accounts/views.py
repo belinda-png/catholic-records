@@ -1,4 +1,4 @@
-import logging
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -7,14 +7,12 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.html import escape
 
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.authtoken.models import Token
 
 from records.models import Parish
 from .models import (
@@ -23,9 +21,9 @@ from .models import (
     PendingRegistration,
     StaffProfile,
 )
-
-logger = logging.getLogger(__name__)
-User = get_user_model()
+from django.utils.html import escape
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from records.models import Parish
 
 
 @api_view(["GET"])
@@ -33,19 +31,25 @@ User = get_user_model()
 @permission_classes([AllowAny])
 def public_parishes(request):
     return Response(list(Parish.objects.filter(is_active=True).values("id", "name")))
+User = get_user_model()
 
 
 def generate_username(email):
-    """Generate a valid, unique username from an email address."""
+    """
+    Generate a valid, unique username from an email address.
+    Symbols in the email are not copied into the username.
+    """
     local_part = email.split("@")[0]
 
     username = "".join(
         char for char in local_part if char.isalnum() or char in "@.+-_"
     )
+
     username = username[:140] or "staff"
 
     original = username
     counter = 1
+
     while User.objects.filter(username=username).exists():
         suffix = str(counter)
         username = f"{original[:150 - len(suffix)]}{suffix}"
@@ -58,7 +62,11 @@ def send_otp(email, purpose, full_name="", parish=None, access_code=None):
     """Generate and email a six-digit OTP."""
     code = get_random_string(6, allowed_chars="0123456789")
 
-    EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).delete()
+    EmailOTP.objects.filter(
+        email=email,
+        purpose=purpose,
+        is_used=False,
+    ).delete()
 
     EmailOTP.objects.create(
         email=email,
@@ -66,13 +74,14 @@ def send_otp(email, purpose, full_name="", parish=None, access_code=None):
         purpose=purpose,
         expires_at=timezone.now() + timedelta(minutes=10),
     )
-
     greeting = f"Hello {full_name},\n\n" if full_name else ""
+
     message = (
         f"{greeting}"
         f"Your verification code is {code}.\n\n"
         "It expires in 10 minutes. Do not share this code with anyone."
     )
+
     if parish and access_code:
         message += f"\n\nYour parish access code for {parish.name} is: {access_code}"
 
@@ -82,6 +91,7 @@ def send_otp(email, purpose, full_name="", parish=None, access_code=None):
         f"<p>Your verification code: <b>{code}</b> (expires in 10 minutes)</p>"
         "<p>Do not share this code with anyone.</p>"
     )
+
     if parish and access_code:
         html_message += (
             f"<p>Your parish access code for {escape(parish.name)}: "
@@ -100,14 +110,18 @@ def send_otp(email, purpose, full_name="", parish=None, access_code=None):
 
 def get_valid_otp(email, purpose):
     return EmailOTP.objects.filter(
-        email=email, purpose=purpose, is_used=False
+        email=email,
+        purpose=purpose,
+        is_used=False,
     ).order_by("-created_at").first()
 
 
 def create_login_token(user):
-    token, _ = Token.objects.get_or_create(user=user)
+    token, created = Token.objects.get_or_create(user=user)
+
     token.created = timezone.now()
     token.save(update_fields=["created"])
+
     return token
 
 
@@ -129,8 +143,6 @@ def user_response(user, token):
             "parish_name": profile.parish.name if profile else None,
         },
     }
-
-
 class RegistrationOTPView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -182,7 +194,6 @@ class RegistrationOTPView(APIView):
                 access_code=parish_code.get_code(),
             )
         except Exception:
-            logger.exception("Could not send registration OTP email")
             return Response(
                 {"error": "We could not send your email code. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -250,7 +261,10 @@ class CompleteRegistrationView(APIView):
             )
 
         try:
-            parish_code = ParishAccessCode.objects.get(parish=pending.parish, is_active=True)
+            parish_code = ParishAccessCode.objects.get(
+                parish=pending.parish,
+                is_active=True,
+            )
         except ParishAccessCode.DoesNotExist:
             return Response(
                 {"error": "This parish does not currently have an active access code."},
@@ -279,10 +293,14 @@ class CompleteRegistrationView(APIView):
                 email=email,
                 first_name=pending.full_name[:150],
             )
+
             user.set_unusable_password()
             user.save()
 
-            StaffProfile.objects.create(user=user, parish=pending.parish)
+            StaffProfile.objects.create(
+                user=user,
+                parish=pending.parish,
+            )
 
             pending.delete()
 
@@ -339,7 +357,6 @@ class LoginOTPView(APIView):
         try:
             send_otp(email, "LOGIN")
         except Exception:
-            logger.exception("Could not send login OTP email")
             return Response(
                 {"error": "We could not send your email code. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -397,7 +414,10 @@ class VerifyLoginOTPView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=True,
+        ).first()
 
         if not user:
             return Response(
@@ -426,6 +446,9 @@ class VerifyLoginOTPView(APIView):
         token = create_login_token(user)
 
         return Response(
-            {"message": "Login successful.", **user_response(user, token)},
+            {
+                "message": "Login successful.",
+                **user_response(user, token),
+            },
             status=status.HTTP_200_OK,
         )
