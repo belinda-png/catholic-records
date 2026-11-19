@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 
 # Local development reads ../.env if it exists. On Render, real environment variables are used.
 _env_file = BASE_DIR.parent / ".env"
@@ -130,9 +130,9 @@ WHITENOISE_INDEX_FILE = True
 # ---------------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
+EMAIL_PORT = 587
+EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "parishrecords09@gmail.com")
 EMAIL_HOST_PASSWORD = os.environ.get( "EMAIL_HOST_PASSWORD","xxxxxxxxxxxxxxxx").replace(" ", "")
 DEFAULT_FROM_EMAIL = f"Parish Records <{EMAIL_HOST_USER}>"
