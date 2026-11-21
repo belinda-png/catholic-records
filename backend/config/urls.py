@@ -27,7 +27,18 @@ urlpatterns = [
     
 ]
 
+from django.db import connection
+from django.http import JsonResponse
 
+def health(request):
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT 1")
+        return JsonResponse({"status": "ok"})
+    except Exception:
+        return JsonResponse({"status": "database down"}, status=503)
+
+urlpatterns += [path("health/", health)]
 
 # ...your existing urlpatterns...
 
