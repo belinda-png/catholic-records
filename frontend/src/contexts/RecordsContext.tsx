@@ -71,6 +71,7 @@ const baptismBody = (d: PersonDraft, notes = '', convert?: Convert) => ({
   notes,
   is_conversion: !!convert,
   previous_religion: convert?.previousReligion ?? '',
+  registered_as: d.registeredAs ?? '',
 });
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
