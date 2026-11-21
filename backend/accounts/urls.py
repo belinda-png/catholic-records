@@ -6,9 +6,11 @@ from .views import (
     LoginOTPView,
     VerifyLoginOTPView,
     public_parishes,
+    admin_overview,
 )
 
 urlpatterns = [
+    path("admin-overview/", admin_overview),
     path("register/", RegistrationOTPView.as_view(), name="register"),
     path("register/complete/", CompleteRegistrationView.as_view(), name="complete-registration"),
     path("login/", LoginOTPView.as_view(), name="login"),
