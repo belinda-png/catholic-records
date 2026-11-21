@@ -10,6 +10,7 @@ import { Modal } from './Modal';
 import { PersonProfileModal } from './PersonProfileModal';
 import { SacramentFormModal } from './SacramentFormModal';
 import { EditPersonModal } from './EditPersonModal';
+import {AdminDashboardModal} from './AdminDashboardModal';
 export function ModalHost() {
   const { modal, closeModal, openProfile, backProfile, openSacrament, parishPrompt, chooseParish, cancelParishPrompt } = useUI();
   const { parishes } = useRecords();
@@ -22,6 +23,7 @@ export function ModalHost() {
       {modal.kind === 'editPerson' && <EditPersonModal key={`e-${modal.personId}`} personId={modal.personId} onClose={closeModal} />}
       {modal.kind === 'import' && <ImportModal key={`i-${modal.type}`} type={modal.type} onClose={closeModal} />}
       {modal.kind === 'documents' && <DocumentsModal key="documents" onClose={closeModal} />}
+      {modal.kind === 'admin' && <AdminDashboardModal key="admin" onClose={closeModal} />}
       {modal.kind === 'profile' &&
       <PersonProfileModal
         key="profile"
