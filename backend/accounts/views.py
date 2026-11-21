@@ -117,11 +117,11 @@ def get_valid_otp(email, purpose):
 
 
 def create_login_token(user):
-    token, created = Token.objects.get_or_create(user=user)
-
+    token, _ = Token.objects.get_or_create(user=user)
     token.created = timezone.now()
     token.save(update_fields=["created"])
-
+    user.last_login = timezone.now()
+    user.save(update_fields=["last_login"])
     return token
 
 
