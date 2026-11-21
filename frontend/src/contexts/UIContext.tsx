@@ -38,6 +38,7 @@ const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: {children: ReactNode;}) {
   const user = getUser();
+  const openAdmin = useCallback(() => setModal({ kind: 'admin' }), []);
   const isStaff = user?.role === 'staff' && !!user.parish_id;
   const myParishId = isStaff ? String(user!.parish_id) : null;
 
