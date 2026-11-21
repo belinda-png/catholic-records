@@ -452,3 +452,30 @@ class VerifyLoginOTPView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+@api_view(["GET"])
+def admin_overview(request):
+    if not request.user.is_superuser:
+        return Response({"detail": "Admins only."}, status=403)
+
+    staff = [
+        {
+            "id": s.user_id,
+            "name": s.user.first_name,
+            "email": s.user.email,
+            "parish": s.parish.name,
+            "is_active": s.is_active and s.user.is_active,
+            "last_login": s.user.last_login,
+            "joined": s.user.date_joined,
+        }
+        for s in StaffProfile.objects.select_related("user", "parish").order_by("parish__name", "user__first_name")
+    ]
+    parishes = list(
+        Parish.objects.annotate(
+            baptisms=Count("baptism_records", distinct=True),
+            communions=Count("communion_records", distinct=True),
+            confirmations=Count("confirmation_records", distinct=True),
+            matrimonies=Count("matrimony_records", distinct=True),
+        ).values("id", "name", "is_active", "baptisms", "communions", "confirmations", "matrimonies")
+    )
+    pending = list(PendingRegistration.objects.values("email", "full_name", "parish__name"))
+    return Response({"staff": staff, "parishes": parishes, "pending": pending})
