@@ -10,7 +10,7 @@ interface ParishSelectorProps {
 }
 
 export function ParishSelector({ refreshing, onRefresh }: ParishSelectorProps) {
-  const { selectedParishId, setSelectedParishId, isStaff, myParishId, viewAll, setViewAll } = useUI();
+  const { selectedParishId, setSelectedParishId, isStaff, openAdmin, myParishId, viewAll, setViewAll } = useUI();
   const { parishes = [] } = useRecords();
   const parish = parishes.find((p) => p.id === selectedParishId);
   const mine = parishes.find((p) => p.id === myParishId);
@@ -66,6 +66,9 @@ export function ParishSelector({ refreshing, onRefresh }: ParishSelectorProps) {
           <RefreshCwIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
           Refresh
         </button>
+        {!isStaff &&
+        <button type="button" onClick={openAdmin} className={secondaryButton}>Admin</button>
+        }
       </div>
     </section>);
 
