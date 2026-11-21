@@ -150,7 +150,7 @@ export function SacramentFormModal({ type, initialPersonId, onClose }: Sacrament
       try {
         if (isEntry) {
           const { record } = await createBaptism(
-            { ...candidate, parishId: details.parishId },
+            { ...candidate, parishId: details.parishId, registeredAs: candidateType },
             details.notes.trim(),
             isConversion ? { previousReligion: details.extra.previousReligion.trim() } : undefined
           );
