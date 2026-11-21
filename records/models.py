@@ -72,7 +72,7 @@ class BaptismRecord(models.Model):
         related_name="baptism_records"
     )
     minister = models.CharField(max_length=200, blank=True)
-
+    registered_as = models.CharField(max_length=10, blank=True)  # "infant" or "adult"
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -103,6 +103,7 @@ class CommunionRecord(models.Model):
     )
     minister = models.CharField(max_length=200, blank=True)
     registration_number = models.CharField(max_length=50, blank=True)
+    registered_as = models.CharField(max_length=10, blank=True)  # "infant" or "adult"
 
     created_at = models.DateTimeField(auto_now_add=True)
 
