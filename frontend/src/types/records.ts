@@ -24,6 +24,7 @@ export interface Person {
   registeredOn: string;
   christianName?: string;
   surname?: string;
+  registeredAs?: string;
 }
 
 export interface SacramentRecord {
@@ -59,6 +60,7 @@ export interface PersonDraft {
   village: string; // Residence
   minister: string;
   phone: string;
+  registeredAs?: string;
 }
 
 export interface SpouseDraft {
