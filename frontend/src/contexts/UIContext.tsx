@@ -8,6 +8,7 @@ export type ModalState =
 {kind: 'import';type: SacramentType;} |
 {kind: 'documents';} |
 {kind: 'editPerson';personId: string;} |
+{kind: 'admin';} |
 {kind: 'profile';stack: string[];};
 
 interface UIContextValue {
@@ -21,6 +22,7 @@ interface UIContextValue {
   canEdit: (parishId: string) => boolean;
   modal: ModalState;
   openSacrament: (type: SacramentType, personId?: string) => void;
+  openAdmin: () => void;
   openImport: (type: SacramentType) => void;
   openDocuments: () => void;
   openEditPerson: (personId: string) => void;
