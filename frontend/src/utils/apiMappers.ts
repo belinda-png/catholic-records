@@ -21,6 +21,7 @@ export const mapPerson = (b: any): Person => ({
   registeredOn: b.date_of_baptism ?? '',
   christianName: b.christian_name ?? '',
   surname: b.surname ?? '',
+  registeredAs: b.registered_as || (b.category === 'Adult' ? 'adult' : b.category === 'Child' ? 'infant' : ''),
 });
 
 export const mapBaptism = (b: any): SacramentRecord => ({
