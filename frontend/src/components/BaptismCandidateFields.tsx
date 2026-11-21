@@ -16,7 +16,7 @@ interface BaptismCandidateFieldsProps {
   errors: PersonDraftErrors;
   onViewPerson: (personId: string) => void;
 }
-
+const asLabel = (r?: string) => (r === 'adult' ? 'Adult' : r === 'infant' ? 'Infant' : '');
 const INFANT_AGE = 4;
 
 const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -101,7 +101,10 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
           <div className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-cream">
             <button type="button" onMouseDown={(e) => {e.preventDefault();pick(p);}} className="min-w-0 flex-1 text-left">
               <span className="block truncate text-sm font-medium text-ink">{p.fullName}</span>
-              <span className="block truncate text-xs text-muted">Reg. {p.regNo} · Baptised in {parishName(p.parishId)}</span>
+              <span className="block truncate text-xs text-muted">
+                Reg. {p.regNo} · Baptised in {parishName(p.parishId)}
+                {asLabel(p.registeredAs) ? ` · Registered as ${asLabel(p.registeredAs)}` : ''}
+              </span>
             </button>
             <button type="button" onMouseDown={(e) => {e.preventDefault();onViewPerson(p.id);}} className="rounded-lg border border-line px-2 py-1 text-xs font-medium text-forest hover:bg-paper">View</button>
           </div>
@@ -160,7 +163,6 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
             Converts are baptised when they are received. Saving records their Catholic baptism.
           </p>
         }
-
         {alreadyIn.length > 0 &&
         <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber-ink" role="status">
             <p className="flex items-center gap-2 font-medium">
@@ -170,13 +172,19 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
             <ul className="mt-2 space-y-1 pl-6">
               {alreadyIn.map((p) =>
             <li key={p.id}>
-                  <button type="button" onClick={() => onViewPerson(p.id)} className="font-semibold underline underline-offset-2 hover:text-forest">{p.fullName}</button>
-                  {' '}· Reg. {p.regNo} · baptised in {parishName(p.parishId)} on {formatDate(p.registeredOn)}
+                  ...
                 </li>
             )}
             </ul>
-          </div>
-        }
+            {alreadyIn.some((p) => p.registeredAs && p.registeredAs !== candidateType) &&
+            <p className="mt-2 text-xs">
+              This person was registered as {asLabel(alreadyIn[0].registeredAs)}, not {candidateType === 'adult' ? 'Adult' : 'Infant'}.
+            </p>
+            }
+            </div>
+          }
+        
+       
 
         <div className="relative">
           <Field label="Reg. No. (INF/AD)" htmlFor="bap-reg" required error={errors.regNo}>

@@ -4,6 +4,7 @@ import { PersonEdit, useRecords } from '../contexts/RecordsContext';
 import { inputClass, primaryButton, secondaryButton } from '../utils/styles';
 import { Field } from './Field';
 import { Modal } from './Modal';
+import { useUI } from '../contexts/UIContext';
 
 interface EditPersonModalProps {
   personId: string;
