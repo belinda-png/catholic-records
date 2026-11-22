@@ -22,6 +22,7 @@ export const mapPerson = (b: any): Person => ({
   christianName: b.christian_name ?? '',
   surname: b.surname ?? '',
   registeredAs: b.registered_as || (b.category === 'Adult' ? 'adult' : b.category === 'Child' ? 'infant' : ''),
+  minister: b.minister ?? '',
 });
 
 export const mapBaptism = (b: any): SacramentRecord => ({

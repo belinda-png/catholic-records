@@ -104,6 +104,9 @@ export function DocumentsModal({ onClose }: DocumentsModalProps) {
   </h3>
   <div className="mb-3 flex gap-2">
             <div className="relative flex-1">
+              <h3 className="mb-3 text-sm font-semibold text-forest">
+                Uploaded documents <span className="font-normal text-muted">· {documents.length}</span>
+              </h3>
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <label htmlFor="doc-search" className="sr-only">Search documents</label>
               <input id="doc-search" type="search" value={search} placeholder="Search by file name" onChange={(e) => setSearch(e.target.value)} className={`${inputClass} py-2 pl-9`} />

@@ -25,6 +25,7 @@ export interface Person {
   christianName?: string;
   surname?: string;
   registeredAs?: string;
+  minister?: string;
 }
 
 export interface SacramentRecord {
