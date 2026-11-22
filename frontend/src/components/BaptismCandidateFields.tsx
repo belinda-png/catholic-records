@@ -76,21 +76,25 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
     [people, draft.regNo, fullName]
   );
 
-  const pick = (p: Person) => {
-    const n = splitName(p);
-    onChange({
-      ...draft,
-      christianName: n.christian,
-      surname: n.surname,
-      dob: p.dob,
-      fatherName: p.fatherName,
-      motherName: p.motherName,
-      godparentName: p.godparentName ?? '',
-      village: p.village,
-      phone: p.phone
-    });
-    setFocus(null);
-  };
+ const pick = (p: Person) => {
+  const n = splitName(p);
+  onChange({
+    ...draft,
+    regNo: p.regNo,
+    dateOfBaptism: p.registeredOn,
+    christianName: n.christian,
+    surname: n.surname,
+    dob: p.dob,
+    fatherName: p.fatherName,
+    motherName: p.motherName,
+    godparentName: p.godparentName ?? '',
+    village: p.village,
+    phone: p.phone,
+    minister: p.minister ?? ''
+  });
+  if (p.registeredAs === 'adult' || p.registeredAs === 'infant') onCandidateTypeChange(p.registeredAs);
+  setFocus(null);
+};
 
   const suggestions =
   matches.length > 0 &&
