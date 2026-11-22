@@ -3,7 +3,7 @@ import { AppDocument, NewPerson, NewRecord, Parish, Person, PersonDraft, Sacrame
 import {
   fetchBaptisms, fetchCommunions, fetchConfirmations, fetchMatrimonies, fetchParishes, fetchDocuments,
   postBaptism, postCommunion, postConfirmation, postMatrimony,
-  uploadDocument, deleteDocument, deleteBaptism,
+  uploadDocument, deleteDocument, deleteBaptism, patchBaptism,
 } from '../api';
 import {
   mapBaptism, mapConversion, mapCommunion, mapConfirmation, mapMatrimony, mapParish, mapPerson,
@@ -249,17 +249,20 @@ const addDocument = useCallback(async (d: { file: File; category: string; person
     await deleteBaptism(id);
     await load();
   }, [load]);
-
-  const value = useMemo(
-    () => ({
-      parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
-      createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
-    }),
-    [
-      parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
-      createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
-    ]
-  );
+  
+const value = useMemo(
+  () => ({
+    parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
+    createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
+    updatePerson, removePerson,
+  }),
+  [
+    parishes, people, records, documents, loading, error, reload, getPerson, recordsFor,
+    createBaptism, createSacrament, importRows, addPerson, addRecord, addDocument, removeDocument,
+    updatePerson, removePerson,
+  ]
+  
+);
 
   return <RecordsContext.Provider value={value}>{children}</RecordsContext.Provider>;
 }
