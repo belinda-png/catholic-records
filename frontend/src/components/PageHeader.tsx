@@ -13,6 +13,12 @@ export function PageHeader({ title, description }: PageHeaderProps) {
   const { people } = useRecords();
   const { selectedParishId, openSacrament } = useUI();
   const baptised = people.filter((p) => selectedParishId === 'all' || p.parishId === selectedParishId).length;
+const { viewParishId } = useUI();
+
+const memberCount =
+  viewParishId === 'all'
+    ? people.length
+    : people.filter((p) => p.parishId === viewParishId).length;
 
   return (
     <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -32,6 +38,7 @@ export function PageHeader({ title, description }: PageHeaderProps) {
         </button>
         <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full border-2 border-gold-bright/70 bg-sage/60 text-center sm:h-24 sm:w-24">
           <div>
+            {memberCount}
             <p className="text-[9px] leading-tight text-muted">Baptised<br />members</p>
             <p className="text-2xl font-semibold text-forest">{baptised}</p>
           </div>

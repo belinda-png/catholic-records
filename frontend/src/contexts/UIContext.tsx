@@ -95,6 +95,13 @@ export function UIProvider({ children }: {children: ReactNode;}) {
     action?.();
   }, [pending, setSelectedParishId]);
   const cancelParishPrompt = useCallback(() => setPending(null), []);
+  const { people } = useRecords();
+  const { viewParishId } = useUI();
+
+const memberCount =
+  viewParishId === 'all'
+    ? people.length
+    : people.filter((p) => p.parishId === viewParishId).length;
 
   const value = useMemo(
     () => ({
