@@ -161,12 +161,12 @@ export function BaptismCandidateFields({ mode, candidateType, onCandidateTypeCha
       </legend>
 
       <div className="space-y-4">
-        {mode === 'conversion' &&
+        {/* {mode === 'conversion' &&
         <p className="flex items-start gap-2 rounded-xl bg-sage px-4 py-3 text-sm text-sage-ink">
             <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             Converts are baptised when they are received. Saving records their Catholic baptism.
           </p>
-        }
+        } */}
         {alreadyIn.length > 0 &&
         <div className="rounded-xl bg-amber-soft px-4 py-3 text-sm text-amber-ink" role="status">
             <p className="flex items-center gap-2 font-medium">
