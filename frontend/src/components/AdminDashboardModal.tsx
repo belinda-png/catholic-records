@@ -65,7 +65,7 @@ export function AdminDashboardModal({ onClose }: { onClose: () => void }) {
 
           {data.pending.length > 0 &&
         <section>
-              <h3 className="mb-2 text-sm font-semibold text-forest">Started sign-up, not finished</h3>
+              <h3 className="mb-2 text-sm font-semibold text-forest">Pending </h3>
               <ul className="text-sm text-muted">{data.pending.map((p: any) => <li key={p.email}>{p.full_name} · {p.email} · {p.parish__name}</li>)}</ul>
             </section>
         }
