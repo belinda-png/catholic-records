@@ -1,5 +1,6 @@
 
 from datetime import timedelta
+import secrets
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
@@ -469,13 +470,54 @@ def admin_overview(request):
         }
         for s in StaffProfile.objects.select_related("user", "parish").order_by("parish__name", "user__first_name")
     ]
-    parishes = list(
-        Parish.objects.annotate(
+
+    codes = {c.parish_id: c.code_plain for c in ParishAccessCode.objects.all()}
+    parishes = [
+        {**p, "access_code": codes.get(p["id"], "")}
+        for p in Parish.objects.annotate(
             baptisms=Count("baptism_records", distinct=True),
             communions=Count("communion_records", distinct=True),
             confirmations=Count("confirmation_records", distinct=True),
             matrimonies=Count("matrimony_records", distinct=True),
         ).values("id", "name", "is_active", "baptisms", "communions", "confirmations", "matrimonies")
-    )
+    ]
     pending = list(PendingRegistration.objects.values("email", "full_name", "parish__name"))
     return Response({"staff": staff, "parishes": parishes, "pending": pending})
+
+
+@api_view(["POST"])
+def admin_create_parish(request):
+    if not request.user.is_superuser:
+        return Response({"detail": "Admins only."}, status=403)
+
+    name = (request.data.get("name") or "").strip()
+    location = (request.data.get("location") or "").strip()
+    if not name:
+        return Response({"error": "Enter the parish name."}, status=400)
+    if Parish.objects.filter(name__iexact=name).exists():
+        return Response({"error": "A parish with this name already exists."}, status=400)
+
+    parish = Parish.objects.create(name=name, location=location, is_active=True)
+    access = ParishAccessCode.objects.filter(parish=parish).first()
+    return Response(
+        {"id": parish.id, "name": parish.name, "access_code": access.code_plain if access else ""},
+        status=201,
+    )
+
+
+@api_view(["POST"])
+def admin_reset_parish_code(request, parish_id):
+    if not request.user.is_superuser:
+        return Response({"detail": "Admins only."}, status=403)
+
+    try:
+        parish = Parish.objects.get(id=parish_id)
+    except Parish.DoesNotExist:
+        return Response({"error": "Parish not found."}, status=404)
+
+    code = secrets.token_hex(3).upper()
+    ParishAccessCode.objects.update_or_create(
+        parish=parish,
+        defaults={"code_hash": make_password(code), "code_plain": code, "is_active": True},
+    )
+    return Response({"id": parish.id, "access_code": code})

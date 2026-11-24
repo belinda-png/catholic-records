@@ -96,3 +96,8 @@ export async function deleteDocument(id: string) {
   if (res.status === 401) logout();
   if (!res.ok) throw new Error(`Delete failed (${res.status})`);
 }
+export const createParish = (name: string, location: string) =>
+  post("/auth/admin-parishes/", { name, location });
+
+export const resetParishCode = (id: number) =>
+  post(`/auth/admin-parishes/${id}/reset-code/`, {});

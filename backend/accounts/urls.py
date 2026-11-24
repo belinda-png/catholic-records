@@ -7,6 +7,8 @@ from .views import (
     VerifyLoginOTPView,
     public_parishes,
     admin_overview,
+    admin_create_parish,
+    admin_reset_parish_code,
 )
 
 urlpatterns = [
@@ -16,4 +18,6 @@ urlpatterns = [
     path("login/", LoginOTPView.as_view(), name="login"),
     path("login/verify/", VerifyLoginOTPView.as_view(), name="verify-login"),
     path("parishes/", public_parishes, name="public-parishes"),
+    path("admin-parishes/", admin_create_parish),
+path("admin-parishes/<int:parish_id>/reset-code/", admin_reset_parish_code),
 ]
