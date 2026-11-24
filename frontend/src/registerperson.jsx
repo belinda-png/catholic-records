@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import "./RegisterPerson.css";
 
-const API = "http://127.0.0.1:8000/api";
+const API = "/api";
 
 const emptyForm = {
   registration_number: "",
